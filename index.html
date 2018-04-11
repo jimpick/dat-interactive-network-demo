@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <style>
+    body {
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    #hypercore-stats {
+      flex: 1;
+    }
+
+    #template {
+      display: none;
+    }
+
+    .upload {
+      background-color: green;
+    }
+
+    .clearfix {
+      clear: both;
+    }
+
+    .dot {
+      border: 1px solid black;
+      width: 3px;
+      height: 3px;
+      margin: 1px;
+      float: left;
+    }
+
+    #vizceral {
+      border: 1px solid red;
+      max-height: 600px;
+    }
+  </style>
+</head>
+<body>
+  <div id="hypercore-stats">
+    <h3 id="key"></h3>
+    <h4><span id="peers">Connected to 0 peers</span></h4>
+    <div id="template">
+      <h3 class="name"></h3>
+      <h4><span class="overview"></span> ↓ <span class="download-speed"></span> / ↑ <span class="upload-speed"></span></h4>
+      <div class="blocks"></div>
+      <div class="clearfix"></div>
+    </div>
+  </div>
+  <canvas id="vizceral"></canvas>
+  <div class="vizceral-notice"></div>
+  <script src="bundle.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+node_modules
+yarn*
+package-lock.json
+*.swp
+bundle.js
