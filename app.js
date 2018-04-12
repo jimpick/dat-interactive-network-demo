@@ -1,6 +1,6 @@
 var Stats = require('./hypercore-stats-ui')
 var ess = require('event-source-stream')
-var Vizceral = require('vizceral')
+var Vizceral = require('vizceral-dat')
 var speedometer = require('speedometer')
 
 var uploadSpeed = speedometer()

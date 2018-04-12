@@ -9,11 +9,10 @@
     "event-source-stream": "^1.5.0",
     "pretty-bytes": "^4.0.2",
     "speedometer": "^1.0.0",
-    "vizceral": "^4.6.0"
+    "vizceral-dat": "^4.6.0"
   },
   "devDependencies": {
     "hypercore": "^6.13.0",
-    "hypercore-stats-server": "^2.0.1",
     "hyperdiscovery": "^7.0.0",
     "hyperdrive": "^9.12.3",
     "minimist": "^1.2.0",

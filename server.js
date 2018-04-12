@@ -1,7 +1,7 @@
 var corsify = require('corsify')
 var fs = require('fs')
 var path = require('path')
-var server = require('hypercore-stats-server')
+var server = require('./hypercore-stats-server')
 
 var cors = corsify({
   'Access-Control-Allow-Origin': '*',
