@@ -1,3 +1,5 @@
+var Health = require('./hyperhealth')
+
 module.exports = function (feed, res) {
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
 
@@ -28,6 +30,14 @@ module.exports = function (feed, res) {
       archive.on('content', function () {
         track(archive.content, 'content')
       })
+    }
+    var health = Health(archive)
+    var peers = {}
+    setInterval(getHealth, 1000)
+    function getHealth () {
+      var data = health.get()
+      data.type = 'health'
+      send(res, data)
     }
   }
 

@@ -8,6 +8,7 @@
     "corsify": "^2.1.0",
     "event-source-stream": "^1.5.0",
     "pretty-bytes": "^4.0.2",
+    "pretty-hash": "^1.0.1",
     "speedometer": "^1.0.0",
     "vizceral-dat": "^4.6.0"
   },
