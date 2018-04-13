@@ -1,5 +1,9 @@
 var Health = require('./hyperhealth')
 var hyperdiscovery = require('hyperdiscovery')
+var speedometer = require('speedometer')
+var pump = require('pump')
+var through2 = require('through2')
+var prettyHash = require('pretty-hash')
 
 module.exports = function (feed, wait, res) {
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
@@ -92,8 +96,50 @@ module.exports = function (feed, wait, res) {
 
   function join () {
     var target = archive ? archive : feed
-    var sw = hyperdiscovery(target)
-    sw.on('connection', function (peer, type) {
+
+    var peerSpeeds = {}
+    const opts = {
+      live: true,
+      connect: function (local, remote) {
+        function getRemoteId () {
+          const remoteId = local.remoteId && local.remoteId.toString('hex')
+          if (remoteId && !peerSpeeds[remoteId]) {
+            peerSpeeds[remoteId] = {
+              downloadSpeed: speedometer(),
+              uploadSpeed: speedometer()
+            }
+          }
+          return remoteId
+        }
+        pump(
+          local,
+          through2(function (chunk, enc, cb) {
+            // console.log('Upload', prettyHash(local.id),
+            //            prettyHash(local.remoteId), chunk.length)
+            const remoteId = getRemoteId()
+            if (remoteId) {
+              peerSpeeds[remoteId].uploadSpeed(chunk.length)
+            }
+            this.push(chunk)
+            cb()
+          }),
+          remote,
+          through2(function (chunk, enc, cb) {
+            // console.log('Download', prettyHash(local.id),
+            //            prettyHash(local.remoteId), chunk.length)
+            const remoteId = getRemoteId()
+            if (remoteId) {
+              peerSpeeds[remoteId].downloadSpeed(chunk.length)
+            }
+            this.push(chunk)
+            cb()
+          }),
+          local
+        )
+      }
+    }
+    var sw = hyperdiscovery(target, opts)
+    sw.on('connection', function (peer, info) {
       console.log('connected to', sw.connections.length, 'peers')
       peer.on('close', function () {
         console.log('peer disconnected')
@@ -103,6 +149,16 @@ module.exports = function (feed, wait, res) {
     setInterval(getHealth, 1000)
     function getHealth () {
       var data = health.get()
+      if (data.peers) {
+        data.peers.forEach(peer => {
+          const remoteId = peer.remoteId
+          if (remoteId && peerSpeeds[remoteId]) {
+            peer.downloadSpeed = peerSpeeds[remoteId].downloadSpeed()
+            peer.uploadSpeed = peerSpeeds[remoteId].uploadSpeed()
+          }
+        })
+      }
+      // console.log('Jim', data)
       data.type = 'health'
       send(res, data)
     }

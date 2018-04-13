@@ -27,13 +27,13 @@ function updateViz () {
     connections.push({
       source: 'peer0',
       target: name,
-      metrics: { normal: upload },
+      metrics: { normal: peer.uploadSpeed / 3000 },
       metadata: { streaming: true }
     })
     connections.push({
       source: name,
       target: 'peer0',
-      metrics: { normal: download },
+      metrics: { normal: peer.downloadSpeed / 3000 },
       metadata: { streaming: true }
     })
   })
