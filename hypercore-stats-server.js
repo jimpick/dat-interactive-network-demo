@@ -1,6 +1,7 @@
 var Health = require('./hyperhealth')
+var hyperdiscovery = require('hyperdiscovery')
 
-module.exports = function (feed, res) {
+module.exports = function (feed, wait, res) {
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
 
   var archive = feed.metadata ? feed : null
@@ -14,6 +15,9 @@ module.exports = function (feed, res) {
   send(res, {type: 'key', key: key})
 
   feed.ready(function () {
+    if (wait) setTimeout(join, Number(wait) * 1000)
+    else join()
+
     if (archive) track(feed, 'metadata')
     else track(feed, null)
   })
@@ -31,14 +35,7 @@ module.exports = function (feed, res) {
         track(archive.content, 'content')
       })
     }
-    var health = Health(archive)
-    var peers = {}
-    setInterval(getHealth, 1000)
-    function getHealth () {
-      var data = health.get()
-      data.type = 'health'
-      send(res, data)
-    }
+
   }
 
   res.on('close', function () {
@@ -92,4 +89,23 @@ module.exports = function (feed, res) {
   function send (res, message) {
     res.write('data: ' + JSON.stringify(message) + '\n\n')
   }
+
+  function join () {
+    var target = archive ? archive : feed
+    var sw = hyperdiscovery(target)
+    sw.on('connection', function (peer, type) {
+      console.log('connected to', sw.connections.length, 'peers')
+      peer.on('close', function () {
+        console.log('peer disconnected')
+      })
+    })
+    var health = Health(target)
+    setInterval(getHealth, 1000)
+    function getHealth () {
+      var data = health.get()
+      data.type = 'health'
+      send(res, data)
+    }
+  }
 }
+

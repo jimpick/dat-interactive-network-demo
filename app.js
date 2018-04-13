@@ -13,7 +13,7 @@ var viz = new Vizceral.default(document.getElementById('vizceral'))
 function updateViz () {
   var upload = uploadSpeed() / 3000
   var download = downloadSpeed() / 3000
-  console.log('Jim', upload, download)
+  // console.log('Jim', upload, download)
   const nodes = [
     {
       name: 'peer0',

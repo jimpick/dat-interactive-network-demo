@@ -9,11 +9,11 @@ var cors = corsify({
   'Access-Control-Allow-Headers': 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Authorization'
 })
 
-module.exports = function (archive) {
+module.exports = function (archive, wait) {
   return cors(function (req, res) {
     if (req.url === '/') return file('index.html', 'text/html', res)
     if (req.url === '/bundle.js') return file('bundle.js', 'text/javascript', res)
-    server(archive, res)
+    server(archive, wait, res)
   })
 }
 
