@@ -8,6 +8,7 @@
     "browserify": "^16.1.1",
     "corsify": "^2.1.0",
     "event-source-stream": "^1.5.0",
+    "integration-tests": "jimpick/integration-tests#vizceral",
     "pretty-bytes": "^4.0.2",
     "pretty-hash": "^1.0.1",
     "pump": "^3.0.0",
