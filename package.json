@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
+    "@jimpick/vizceral-dat": "^4.6.0",
     "browserify": "^16.1.1",
     "corsify": "^2.1.0",
     "event-source-stream": "^1.5.0",
@@ -11,8 +12,7 @@
     "pretty-hash": "^1.0.1",
     "pump": "^3.0.0",
     "speedometer": "^1.0.0",
-    "through2": "^2.0.3",
-    "vizceral-dat": "^4.6.0"
+    "through2": "^2.0.3"
   },
   "devDependencies": {
     "hypercore": "^6.13.0",
