@@ -5,9 +5,7 @@ var pump = require('pump')
 var through2 = require('through2')
 var prettyHash = require('pretty-hash')
 
-module.exports = function (feed, wait, res) {
-  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
-
+module.exports = function (feed, wait, emit) {
   var archive = feed.metadata ? feed : null
 
   if (archive) {
@@ -16,7 +14,7 @@ module.exports = function (feed, wait, res) {
 
   var key = feed.key.toString('hex')
 
-  send(res, {type: 'key', key: key})
+  send({type: 'key', key: key})
 
   feed.ready(function () {
     if (wait) setTimeout(join, Number(wait) * 1000)
@@ -26,7 +24,7 @@ module.exports = function (feed, wait, res) {
     else track(feed, null)
   })
 
-  send(res, {type: 'peer-update', peers: feed.peers.length})
+  send({type: 'peer-update', peers: feed.peers.length})
 
   feed.on('peer-add', onpeeradd)
   feed.on('peer-remove', onpeerremove)
@@ -42,44 +40,48 @@ module.exports = function (feed, wait, res) {
 
   }
 
+  /*
   res.on('close', function () {
     feed.removeListener('peer-add', onpeeradd)
     feed.removeListener('peer-remove', onpeerremove)
   })
+  */
 
   function track (feed, name) {
-    send(res, {type: 'feed', name: name, key: key, blocks: bitfield(feed), bytes: feed.byteLength})
+    send({type: 'feed', name: name, key: key, blocks: bitfield(feed), bytes: feed.byteLength})
 
     feed.on('update', onupdate)
-    feed.on('append', onupdate)
+    // feed.on('append', onupdate)
     feed.on('download', ondownload)
     feed.on('upload', onupload)
 
+    /*
     res.on('close', function () {
       feed.removeListener('update', onupdate)
       feed.removeListener('download', ondownload)
       feed.removeListener('upload', onupload)
     })
+    */
 
     function onupdate () {
-      send(res, {type: 'update', name: name, key: key, blocks: bitfield(feed), bytes: feed.byteLength})
+      send({type: 'update', name: name, key: key, blocks: bitfield(feed), bytes: feed.byteLength})
     }
 
     function ondownload (index, data) {
-      send(res, {type: 'download', name: name, index: index, bytes: data.length})
+      send({type: 'download', name: name, index: index, bytes: data.length})
     }
 
     function onupload (index, data) {
-      send(res, {type: 'upload', name: name, index: index, bytes: data.length})
+      send({type: 'upload', name: name, index: index, bytes: data.length})
     }
   }
 
   function onpeeradd () {
-    send(res, {type: 'peer-update', peers: feed.peers.length})
+    send({type: 'peer-update', peers: feed.peers.length})
   }
 
   function onpeerremove () {
-    send(res, {type: 'peer-update', peers: feed.peers.length})
+    send({type: 'peer-update', peers: feed.peers.length})
   }
 
   function bitfield (feed) {
@@ -90,8 +92,9 @@ module.exports = function (feed, wait, res) {
     return list
   }
 
-  function send (res, message) {
-    res.write('data: ' + JSON.stringify(message) + '\n\n')
+  function send (message) {
+    // console.log('Jim send', message)
+    emit('telemetry', message)
   }
 
   function join () {
@@ -158,10 +161,8 @@ module.exports = function (feed, wait, res) {
           }
         })
       }
-      // console.log('Jim', data)
       data.type = 'health'
-      send(res, data)
+      send(data)
     }
   }
 }
-

@@ -7,6 +7,7 @@ var prettyHash = require('pretty-hash')
 var uploadSpeed = speedometer()
 var downloadSpeed = speedometer()
 var peers = []
+var updateTime = null
 
 var viz = new Vizceral.default(document.getElementById('vizceral'))
 
@@ -21,19 +22,20 @@ function updateViz () {
     }
   ]
   const connections = []
+  const fresh = Date.now() - updateTime < 1500
   peers.forEach(peer => {
     const name = prettyHash(peer.remoteId)
     nodes.push({ name, nodes: [{}] })
     connections.push({
       source: 'peer0',
       target: name,
-      metrics: { normal: peer.uploadSpeed / 3000 },
+      metrics: { normal: fresh ? peer.uploadSpeed / 3000 : 0 },
       metadata: { streaming: true }
     })
     connections.push({
       source: name,
       target: 'peer0',
-      metrics: { normal: peer.downloadSpeed / 3000 },
+      metrics: { normal: fresh ? peer.downloadSpeed / 3000 : 0 },
       metadata: { streaming: true }
     })
   })
@@ -88,8 +90,8 @@ ess('http://' + window.location.host + '/events')
         uploadSpeed(data.bytes)
         return stats.onupload(data)
       case 'health':
-        // console.log('health', data)
         peers = data.peers
+        updateTime = Date.now()
         return
     }
   })

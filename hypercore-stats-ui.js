@@ -80,6 +80,10 @@ Stats.prototype.onpeerupdate = function (data) {
 
 Stats.prototype.ondownload = function (data) {
   this._get(data.name).downloadSpeed(data.bytes)
+  for (var i = this._get(data.name).blocks; i <= data.index; i++) {
+    this._get(data.name).blocks++
+    this._appendDot(data.name, i)
+  }
   this.$$(data.name, '.block-' + data.index).style.backgroundColor = 'gray'
 }
 
