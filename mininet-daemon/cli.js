@@ -1,37 +1,29 @@
 #!/usr/bin/env node
 
 var path = require('path')
-var stats = require('./server')
 var http = require('http')
 var minimist = require('minimist')
 var events = require('events')
+var corsify = require('corsify')
 
-/*
-var argv = minimist(process.argv.slice(2), {
-  alias: {port: 'p', 'hyperdrive': 'd', wait: 'w'},
-  boolean: ['hyperdrive']
+var cors = corsify({
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
+  'Access-Control-Allow-Headers': 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Authorization'
 })
-
-var hypercore = require('hypercore')
-var hyperdrive = require('hyperdrive')
-var ram = require('random-access-memory')
-
-var key = argv._[0]
-if (!key) {
-  console.error(
-    `Usage: node cli [--port=<port>] [--hyperdrive] \n` +
-    `          [--wait=<seconds>] <key>\n`
-  )
-  process.exit(1)
-}
-*/
 
 var telemetry = new events.EventEmitter()
 
-// server.listen(argv.port || process.env.PORT || 10000)
-var server = http.createServer(stats(sendTelemetry => {
-  telemetry.on('telemetry', sendTelemetry)
-}))
+var server = http.createServer(cors(statsRequest))
+function statsRequest (req, res) {
+  // event stream
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+  telemetry.on('telemetry', message => {
+    res.write('data: ' + JSON.stringify(message) + '\n\n')
+  })
+  // Stays open
+}
+
 server.listen(process.env.PORT || 10000)
 server.once('error', function () {
   server.listen(0)
