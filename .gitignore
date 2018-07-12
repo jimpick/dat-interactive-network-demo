@@ -3,3 +3,4 @@ yarn*
 package-lock.json
 *.swp
 bundle.js
+fixtures/dat2-150mb

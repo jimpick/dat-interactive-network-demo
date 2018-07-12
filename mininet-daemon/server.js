@@ -17,10 +17,11 @@ function statsRequest (req, res) {
   console.log('New request', req.url)
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
   // Stays open
-  var test = require('integration-tests/tests/dat/replicate-1gb')
+  var test = require('./replicate-150mb')
   var attachPath = path.resolve(__dirname, 'attach')
   test(attachPath, event => {
     res.write('data: ' + JSON.stringify(event) + '\n\n')
+    process.stdout.write('.')
   })
 }
 

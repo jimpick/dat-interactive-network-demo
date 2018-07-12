@@ -7,12 +7,15 @@
     "@jimpick/vizceral-dat": "^4.6.0",
     "browserify": "^16.1.1",
     "corsify": "^2.1.0",
+    "dat-node": "^3.5.11",
     "event-source-stream": "^1.5.0",
-    "integration-tests": "jimpick/integration-tests#vizceral",
+    "mininet": "jimpick/mininet#vizceral",
     "pretty-bytes": "^4.0.2",
     "pretty-hash": "^1.0.1",
     "pump": "^3.0.0",
     "speedometer": "^1.0.0",
+    "tapenet": "jimpick/tapenet#vizceral",
+    "tempy": "^0.2.1",
     "through2": "^2.0.3"
   },
   "devDependencies": {
@@ -23,7 +26,8 @@
     "random-access-memory": "^2.4.0"
   },
   "scripts": {
-    "build": "browserify app.js > bundle.js"
+    "build": "browserify app.js > bundle.js",
+    "make-fixture": "mkdir -p fixtures/dat2-150mb && dd if=/dev/urandom of=fixtures/dat2-150mb/150mb.bin bs=1000000 count=150"
   },
   "keywords": [],
   "author": "Jim Pick (@jimpick)",
