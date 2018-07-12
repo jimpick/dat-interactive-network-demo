@@ -1,6 +1,6 @@
 {
-  "name": "vizceral-hypercore-stats",
-  "version": "1.0.0",
+  "name": "dat-interactive-network-demo",
+  "version": "0.0.1",
   "description": "",
   "main": "app.js",
   "dependencies": {
