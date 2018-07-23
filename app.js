@@ -76,7 +76,7 @@ setInterval(updateViz, 1000)
 var stats = Stats(document.getElementById('hypercore-stats'))
 
 // ess('http://' + window.location.host + '/events')
-ess('http://10.0.1.36:10000/events')
+ess('http://10.0.1.36:5000/events')
   .on('data', function (data) {
     data = JSON.parse(data)
     switch (data.type) {
