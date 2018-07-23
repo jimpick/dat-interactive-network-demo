@@ -36,9 +36,16 @@
       float: left;
     }
 
+    .canvasWrapper {
+      height: 250px;
+      /* flex: 1 0; */
+    }
+
     #vizceral {
       border: 1px solid red;
-      max-height: 800px;
+      /* max-height: 800px; */
+      /* height: 50px; */
+      /* flex: 0; */
     }
   </style>
 </head>
@@ -53,7 +60,9 @@
       <div class="clearfix"></div>
     </div>
   </div>
-  <canvas id="vizceral"></canvas>
+  <div class="canvasWrapper">
+    <canvas id="vizceral"></canvas>
+  </div>
   <div class="vizceral-notice"></div>
   <script src="bundle.js"></script>
 </body>
