@@ -8,6 +8,8 @@ var prettyHash = require('pretty-hash')
 module.exports = function (feed, wait, emit) {
   var archive = feed.metadata ? feed : null
 
+  const streamIdToNameMap = {}
+
   if (archive) {
     feed = archive.metadata
   }
@@ -103,6 +105,15 @@ module.exports = function (feed, wait, emit) {
     var peerSpeeds = {}
     const opts = {
       live: true,
+      stream: () => {
+        const stream = archive.replicate()
+        const hex = stream.id.toString('hex')
+        if (!streamIdToNameMap[hex]) {
+          streamIdToNameMap[hex] = archive.id
+          send({type: 'peerIdToHostMap', peerId: hex, host: archive.id})
+        }
+        return stream
+      },
       connect: function (local, remote) {
         function getRemoteId () {
           const remoteId = local.remoteId && local.remoteId.toString('hex')

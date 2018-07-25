@@ -3,7 +3,7 @@ const supervisor = require('./mnSupervisor')
 
 module.exports = run
 
-var {h1, h2, h3} = supervisor.basicTopology(3, {bandwidth: 100}) // 100mbit
+var {h1, h2, h3, h4, h5} = supervisor.basicTopology(5, {bandwidth: 100}) // 100mbit
 
 function run (sendTelemetry, finishedCallback) {
   console.log('Starting replication')
@@ -14,8 +14,8 @@ function run (sendTelemetry, finishedCallback) {
   supervisor.on('message', handleSupervisorMessage)
 
   supervisor.start(startNode => {
-    // Clients: h2, h3
-    ['h2', 'h3'].forEach(name => {
+    // Clients: h2, h3, h4, h5
+    ['h2', 'h3', 'h4', 'h5'].forEach(name => {
       const funcTemplate = function () {
         var Dat = require('dat-node')
         var tempy = require('tempy')
@@ -28,23 +28,24 @@ function run (sendTelemetry, finishedCallback) {
             if (err) throw err
 
             var archive = dat.archive
+            archive.id = 'hreplace'
             statsServer(archive, 0.5, (message, args) => {
-              h2.emit(message, args)
+              hreplace.emit(message, args)
             })
 
             if (archive.content) contentReady()
             archive.once('content', contentReady)
 
             function contentReady () {
-              supervisor.log('h2 content ready')
+              supervisor.log('hreplace content ready')
               archive.content.on('sync', function () {
-                supervisor.log('h2 dat synced')
+                supervisor.log('hreplace dat synced')
               })
             }
           })
         })
       }
-      const funcString = funcTemplate.toString().replace('h2', name)
+      const funcString = funcTemplate.toString().replace(/hreplace/g, name)
       const src = `;var statsServerPath = '${statsServerPath}';\n` +
         '(\n' + funcString + '\n' + ')()'
       startNode(eval(name), src)

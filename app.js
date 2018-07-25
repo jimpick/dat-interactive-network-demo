@@ -6,7 +6,8 @@ var prettyHash = require('pretty-hash')
 
 var uploadSpeed = speedometer()
 var downloadSpeed = speedometer()
-var peers = []
+let peerSpeeds = {}
+var peerIdToHostMap = {}
 var updateTime = null
 
 var viz = new Vizceral.default(document.getElementById('vizceral'))
@@ -17,29 +18,57 @@ function updateViz () {
   // console.log('Jim', upload, download)
   const nodes = [
     {
-      name: 'peer0',
+      name: 'h1',
       nodes: [{}]
     }
   ]
+  const peers = {
+    'h1': nodes[0]
+  }
   const connections = []
   const fresh = Date.now() - updateTime < 1500
-  peers.forEach(peer => {
-    const name = prettyHash(peer.remoteId)
-    nodes.push({ name, nodes: [{}] })
-    connections.push({
-      source: 'peer0',
-      target: name,
-      metrics: { normal: fresh ? peer.uploadSpeed / 3000 : 0 },
-      metadata: { streaming: true }
-    })
-    connections.push({
-      source: name,
-      target: 'peer0',
-      metrics: { normal: fresh ? peer.downloadSpeed / 3000 : 0 },
-      metadata: { streaming: true }
-    })
+  Object.keys(peerSpeeds).forEach(key => {
+    const match = key.match(/(h\d+)-(h\d+)/)
+    if (match) {
+      const observerPeer = match[1]
+      const remotePeer = match[2]
+      ensureNode(observerPeer)
+      ensureNode(remotePeer)
+      if (remotePeer === observerPeer) return
+      // FIXME: These will get doubled up when observed from both ends
+      const {uploadSpeed, downloadSpeed} = peerSpeeds[key]
+      // console.log('Jim peerSpeeds', key, peerSpeeds[key])
+      connections.push({
+        source: observerPeer,
+        target: remotePeer,
+        metrics: { normal: fresh ? uploadSpeed / 3000 : 0 },
+        metadata: { streaming: true }
+      })
+      connections.push({
+        source: remotePeer,
+        target: observerPeer,
+        metrics: { normal: fresh ? downloadSpeed / 3000 : 0 },
+        metadata: { streaming: true }
+      })
+    }
+
+    function ensureNode (name) {
+      if (peers[name]) return
+      const newNode = {
+        name,
+        nodes: [{}]
+      }
+      nodes.push(newNode)
+      peers[name] = newNode
+    }
   })
-  
+
+  /*
+  console.log('Jim speeds:')
+  connections.forEach(({source, target, metrics: {normal}}) => {
+    console.log('  ', source, target, normal) 
+  })
+  */
   viz.updateData({
     name: 'dat',
     renderer: 'global',
@@ -98,9 +127,30 @@ startBtn.addEventListener('click', () => {
         // stats.onupload(data)
         return
       case 'health':
-        console.log('Jim', data)
-        peers = data.peers
+        // console.log('Jim', data)
+        // peers = data.peers
+        const {host, peers} = data
+        const observerPeer = host
+        peers.forEach(report => {
+          const {remoteId, uploadSpeed, downloadSpeed, have, length} = report
+          let remotePeer = peerIdToHostMap[remoteId] ?
+              peerIdToHostMap[remoteId] : 'h1' // FIXME: Temporary
+          peerSpeeds[`${observerPeer}-${remotePeer}`] = {
+            remoteId,
+            uploadSpeed,
+            downloadSpeed,
+            have,
+            length
+          }
+        })
         updateTime = Date.now()
+        return
+      case 'peerIdToHostMap':
+        {
+          // console.log('Jim', data)
+          const {peerId, host} = data
+          peerIdToHostMap[peerId] = host
+        }
         return
     }
   })
