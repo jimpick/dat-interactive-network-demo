@@ -9,21 +9,10 @@ function run (sendTelemetry, finishedCallback) {
   console.log('Starting replication')
   let finished = false
   var attachPath = path.resolve(__dirname, './attach')
-  supervisor.mininet.on('message', (name, data) => {
-    if (name === 'h1:emit' && data[0] === 'telemetry') {
-      if (finished) return
-      sendTelemetry(data[1])
-    }
-  })
-  supervisor.on('message', message => {
-    console.log('Supervisor message', message)
-    if (message.name === 'log' && message.args[0] === 'h1 dat synced') {
-      setTimeout(() => {
-        finished = true
-        finishedCallback()
-      }, 8000)
-    }
-  })
+
+  supervisor.mininet.on('message', handleHostMessage)
+  supervisor.on('message', handleSupervisorMessage)
+
   supervisor.start(startNode => {
     // setTimeout(() => {
     // }, 0)
@@ -75,4 +64,23 @@ function run (sendTelemetry, finishedCallback) {
       })
     })
   })
+
+  function handleHostMessage (name, data) {
+    if (name === 'h1:emit' && data[0] === 'telemetry') {
+      if (finished) return
+      sendTelemetry(data[1])
+    }
+  }
+
+  function handleSupervisorMessage (message) {
+    console.log('Supervisor message', message)
+    if (message.name === 'log' && message.args[0] === 'h1 dat synced') {
+      setTimeout(() => {
+        finished = true
+        finishedCallback()
+        supervisor.mininet.removeListener('message', handleHostMessage)
+        supervisor.removeListener('message', handleSupervisorMessage)
+      }, 8000)
+    }
+  }
 }

@@ -73,26 +73,35 @@ window.addEventListener('load', () => {
 
 setInterval(updateViz, 1000)
 
-var stats = Stats(document.getElementById('hypercore-stats'))
+// var stats = Stats(document.getElementById('hypercore-stats'))
 
-const stream = ess(window.location.origin + '/events')
-  .on('data', function (data) {
+const startBtn = document.getElementById('startBtn')
+startBtn.addEventListener('click', () => {
+  console.log('Running')
+  const stream = ess(window.location.origin + '/events')
+  stream.on('data', function (data) {
     data = JSON.parse(data)
+    console.log('Jim', data)
     switch (data.type) {
-      case 'close': stream.destroy()
-      case 'key': return stats.onkey(data)
-      case 'peer-update': return stats.onpeerupdate(data)
-      case 'feed': return stats.onfeed(data)
-      case 'update': return stats.onupdate(data)
+      case 'close':
+        console.log('Finished')
+        return stream.destroy()
+      // case 'key': return stats.onkey(data)
+      // case 'peer-update': return stats.onpeerupdate(data)
+      // case 'feed': return stats.onfeed(data)
+      // case 'update': return stats.onupdate(data)
       case 'download':
         downloadSpeed(data.bytes)
-        return stats.ondownload(data)
+        // stats.ondownload(data)
+        return
       case 'upload':
         uploadSpeed(data.bytes)
-        return stats.onupload(data)
+        // stats.onupload(data)
+        return
       case 'health':
         peers = data.peers
         updateTime = Date.now()
         return
     }
   })
+})
