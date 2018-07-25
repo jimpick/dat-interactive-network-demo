@@ -8,7 +8,7 @@ var {h1, h2, h3} = supervisor.basicTopology(3, {bandwidth: 100}) // 100mbit
 function run (sendTelemetry, finishedCallback) {
   console.log('Starting replication')
   let finished = false
-  var attachPath = path.resolve(__dirname, './attach')
+  var statsServerPath = path.resolve(__dirname, './hypercore-stats-server')
 
   supervisor.mininet.on('message', handleHostMessage)
   supervisor.on('message', handleSupervisorMessage)
@@ -19,7 +19,7 @@ function run (sendTelemetry, finishedCallback) {
       const funcTemplate = function () {
         var Dat = require('dat-node')
         var tempy = require('tempy')
-        var statsServer = require(attachPath)
+        var statsServer = require(statsServerPath)
 
         var dir = tempy.directory()
 
@@ -45,7 +45,7 @@ function run (sendTelemetry, finishedCallback) {
         })
       }
       const funcString = funcTemplate.toString().replace('h2', name)
-      const src = `;var attachPath = '${attachPath}';\n` +
+      const src = `;var statsServerPath = '${statsServerPath}';\n` +
         '(\n' + funcString + '\n' + ')()'
       startNode(eval(name), src)
     })
