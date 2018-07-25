@@ -81,7 +81,6 @@ startBtn.addEventListener('click', () => {
   const stream = ess(window.location.origin + '/events')
   stream.on('data', function (data) {
     data = JSON.parse(data)
-    console.log('Jim', data)
     switch (data.type) {
       case 'close':
         console.log('Finished')
@@ -91,14 +90,15 @@ startBtn.addEventListener('click', () => {
       // case 'feed': return stats.onfeed(data)
       // case 'update': return stats.onupdate(data)
       case 'download':
-        downloadSpeed(data.bytes)
+        // downloadSpeed(data.bytes)
         // stats.ondownload(data)
         return
       case 'upload':
-        uploadSpeed(data.bytes)
+        // uploadSpeed(data.bytes)
         // stats.onupload(data)
         return
       case 'health':
+        console.log('Jim', data)
         peers = data.peers
         updateTime = Date.now()
         return
