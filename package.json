@@ -15,7 +15,6 @@
     "pretty-hash": "^1.0.1",
     "pump": "^3.0.0",
     "speedometer": "^1.0.0",
-    "tapenet": "jimpick/tapenet#vizceral",
     "tempy": "^0.2.1",
     "through2": "^2.0.3"
   },

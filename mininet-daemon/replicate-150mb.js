@@ -1,4 +1,4 @@
-var test = require('tapenet')
+var test = require('./tapenet')
 
 // var {h1, h2} = test.topologies.basic() // 1mbit
 
@@ -6,7 +6,7 @@ module.exports = runTest
 
 function runTest (attachPath, sendTelemetry) {
   console.log('Jim runTest')
-  var {h1, h2} = test.topologies.basic(2, {bandwidth: 100}) // 100mbit
+  var {h1, h2} = test.basicTopology(2, {bandwidth: 100}) // 100mbit
 
   test('share a dat between two nodes', function (t) {
     t.timeoutAfter(25000)
