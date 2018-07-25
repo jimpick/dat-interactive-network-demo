@@ -75,11 +75,11 @@ setInterval(updateViz, 1000)
 
 var stats = Stats(document.getElementById('hypercore-stats'))
 
-// ess('http://' + window.location.host + '/events')
-ess('http://10.0.1.36:5000/events')
+const stream = ess(window.location.origin + '/events')
   .on('data', function (data) {
     data = JSON.parse(data)
     switch (data.type) {
+      case 'close': stream.destroy()
       case 'key': return stats.onkey(data)
       case 'peer-update': return stats.onpeerupdate(data)
       case 'feed': return stats.onfeed(data)

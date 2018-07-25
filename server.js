@@ -3,6 +3,7 @@
 var fs = require('fs')
 var path = require('path')
 var http = require('http')
+var runReplicate = require('./mininet-daemon/replicate-150mb')
 
 var server = http.createServer(handler)
 server.listen(process.env.PORT || 5000, '0.0.0.0')
@@ -20,19 +21,22 @@ function handler (req, res) {
   if (req.url === '/events') {
     // event stream
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
-    var test = require('./mininet-daemon/replicate-150mb')
-    var attachPath = path.resolve(__dirname, './mininet-daemon/attach')
-    test(attachPath, event => { 
+    runReplicate(sendTelemetry, finished)
+
+    function sendTelemetry (event) {
       res.write('data: ' + JSON.stringify(event) + '\n\n')
-    })
+    }
+
+    function finished () {
+      console.log('Finished')
+      res.end('data: {"type": "close"}\n\n')
+    }
   }
 }
 
 function file (name, type, res) {
-  console.log('File', name)
   res.setHeader('Content-Type', type + '; charset=utf-8')
   fs.readFile(path.join(__dirname, name), function (err, buf) {
-    console.log('Jim', err)
     if (err) return res.end()
     res.end(buf)
   })

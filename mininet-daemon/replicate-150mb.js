@@ -1,18 +1,32 @@
-var supervisor = require('./mnSupervisor')
+const path = require('path')
+const supervisor = require('./mnSupervisor')
 
 module.exports = run
 
 var {h1, h2} = supervisor.basicTopology(2, {bandwidth: 100}) // 100mbit
 
-function run (attachPath, sendTelemetry) {
+function run (sendTelemetry, finishedCallback) {
+  console.log('Starting replication')
+  let finished = false
+  var attachPath = path.resolve(__dirname, './attach')
+  supervisor.mininet.on('message', (name, data) => {
+    if (name === 'h1:emit' && data[0] === 'telemetry') {
+      if (finished) return
+      sendTelemetry(data[1])
+    }
+  })
+  supervisor.on('message', message => {
+    console.log('Supervisor message', message)
+    if (message.name === 'log' && message.args[0] === 'h1 dat synced') {
+      setTimeout(() => {
+        finished = true
+        finishedCallback()
+      }, 8000)
+    }
+  })
   supervisor.start(startNode => {
-    setTimeout(() => {
-      supervisor.mininet.on('message', (name, data) => {
-        if (name === 'h1:emit' && data[0] === 'telemetry') {
-          sendTelemetry(data[1])
-        }
-      })
-    }, 0)
+    // setTimeout(() => {
+    // }, 0)
     const testFunc = function () {
       var Dat = require('dat-node')
       var tempy = require('tempy')

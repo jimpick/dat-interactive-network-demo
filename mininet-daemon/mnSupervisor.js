@@ -1,13 +1,14 @@
 var mn = require('mininet')({stdio: 'inherit', prefixStdio: true, defer: true})
 var path = require('path')
+var EventEmitter = require('events')
 
 var pending = []
 var parentFilename = (module.parent && module.parent.filename) || '.'
 var parentDirname = path.dirname(parentFilename)
 
-delete require.cache[__filename]
+class Supervisor extends EventEmitter {}
 
-const supervisor = {}
+const supervisor = new Supervisor()
 
 supervisor.mininet = mn
 supervisor.hosts = mn.hosts
@@ -117,7 +118,8 @@ supervisor.start = function (fn) {
     `)
 
     proc.on('message:supervisor', function (data) {
-      console.log('Jim message:supervisor', data)
+      console.log('message:supervisor', data)
+      supervisor.emit('message', data)
       // t[data.name].apply(t, data.args)
     })
 
