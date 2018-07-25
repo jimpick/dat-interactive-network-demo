@@ -78,15 +78,13 @@ supervisor.start = function (fn) {
       var __dirname = '${parentDirname}'
       var __filename = '${parentFilename}'
 
-      /*
-      global.t = new Proxy({}, {
+      global.supervisor = new Proxy({}, {
         get: function (target, name) {
           return function (...args) {
-            host.send('test', {name, args})
+            host.send('supervisor', {name, args})
           }
         }
       })
-      */
 
       var handler =  
       vm.runInNewContext(
@@ -118,8 +116,9 @@ supervisor.start = function (fn) {
       }
     `)
 
-    proc.on('message:test', function (data) {
-      t[data.name].apply(t, data.args)
+    proc.on('message:supervisor', function (data) {
+      console.log('Jim message:supervisor', data)
+      // t[data.name].apply(t, data.args)
     })
 
     pending.push(proc)

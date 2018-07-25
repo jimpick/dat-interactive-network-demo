@@ -2,9 +2,9 @@ var supervisor = require('./mnSupervisor')
 
 module.exports = run
 
-function run (attachPath, sendTelemetry) {
-  var {h1, h2} = supervisor.basicTopology(2, {bandwidth: 100}) // 100mbit
+var {h1, h2} = supervisor.basicTopology(2, {bandwidth: 100}) // 100mbit
 
+function run (attachPath, sendTelemetry) {
   supervisor.start(startNode => {
     setTimeout(() => {
       supervisor.mininet.on('message', (name, data) => {
@@ -16,6 +16,7 @@ function run (attachPath, sendTelemetry) {
     const testFunc = function () {
       var Dat = require('dat-node')
       var tempy = require('tempy')
+      var statsServer = require(attachPath)
 
       var dir = tempy.directory()
 
@@ -24,9 +25,19 @@ function run (attachPath, sendTelemetry) {
           if (err) throw err
 
           var archive = dat.archive
-          require(attachPath)(archive, 3, (message, args) => {
+          statsServer(archive, 0.5, (message, args) => {
             h1.emit(message, args)
           })
+
+          if (archive.content) contentReady()
+          archive.once('content', contentReady)
+
+          function contentReady () {
+            supervisor.log('h1 content ready')
+            archive.content.on('sync', function () {
+              supervisor.log('h1 dat synced')
+            })
+          }
         })
       })
     }
