@@ -118,9 +118,8 @@ supervisor.start = function (fn) {
     `)
 
     proc.on('message:supervisor', function (data) {
-      console.log('message:supervisor', data)
+      // console.log('message:supervisor', data)
       supervisor.emit('message', data)
-      // t[data.name].apply(t, data.args)
     })
 
     pending.push(proc)
