@@ -1,17 +1,18 @@
-var test = require('./tapenet')
+var controller = require('./mnController')
 
 // var {h1, h2} = test.topologies.basic() // 1mbit
 
-module.exports = runTest
+module.exports = run
 
-function runTest (attachPath, sendTelemetry) {
+function run (attachPath, sendTelemetry) {
   console.log('Jim runTest')
-  var {h1, h2} = test.basicTopology(2, {bandwidth: 100}) // 100mbit
+  var {h1, h2} = controller.basicTopology(2, {bandwidth: 100}) // 100mbit
 
-  test('share a dat between two nodes', function (t) {
+  controller.start(startNode => {
+  // test('share a dat between two nodes', function (t) {
     // t.timeoutAfter(25000)
     setTimeout(() => {
-      test.mininet.on('message', (name, data) => {
+      controller.mininet.on('message', (name, data) => {
         // console.log('Jim mininet message', name, data)
         if (name === 'h1:emit' && data[0] === 'telemetry') {
           sendTelemetry(data[1])
@@ -65,9 +66,9 @@ function runTest (attachPath, sendTelemetry) {
       '(\n' +
       testFunc.toString() + '\n' +
       ')()'
-    t.run(h1, src)
+    startNode(h1, src)
 
-    t.run(h2, function () {
+    startNode(h2, function () {
       var Dat = require('dat-node')
       var path = require('path')
       var fixture = path.join(__dirname, '../fixtures/dat2-150mb')
