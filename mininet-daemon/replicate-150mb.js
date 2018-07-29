@@ -57,21 +57,33 @@ function run (numNodes, sendTelemetry, finishedCallback) {
       }
     }
 
+    // Clients: h2, h3, h4, h5, ...
+    let initialNodesStarted
     ready(() => {
-      // Clients: h2, h3, h4, h5, ...
-      const fns = Object.keys(nodes)
-      .filter(name => (name[0] === 'h') && (name !== 'h1'))
-      .map(name => {
-        return cb => addNode(name, cb)
+      console.log('Ready')
+      initialNodesStarted = thunky(startInitialNodes)
+      initialNodesStarted(() => {
+        console.log('All initial nodes started.')
       })
-      runInSeries(fns, () => { console.log('All nodes started.') })
+
+      function startInitialNodes (cb) {
+        console.log('Starting initial nodes')
+        const fns = Object.keys(nodes)
+        .filter(name => (name[0] === 'h') && (name !== 'h1'))
+        .map(name => {
+          return cb => addNode(name, cb)
+        })
+        runInSeries(fns, cb)
+      }
     })
 
     return function addOneMore () {
       ready(() => {
-        const hNodes = Object.keys(nodes).filter(name => name[0] === 'h')
-        const nextName = 'h' + hNodes.length + 1
-        addNode(nextName, () => { console.log('Added', nextName) })
+        initialNodesStarted(() => {
+          const hNodes = Object.keys(nodes).filter(name => name[0] === 'h')
+          const nextName = 'h' + hNodes.length + 1
+          addNode(nextName, () => { console.log('Added', nextName) })
+        })
       })
     }
 
