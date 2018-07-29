@@ -142,14 +142,18 @@ setInterval(updateViz, 1000)
 // var stats = Stats(document.getElementById('hypercore-stats'))
 
 const startBtn = document.getElementById('startBtn')
+const statusEl = document.getElementById('status')
 startBtn.addEventListener('click', () => {
   console.log('Running')
-  const stream = ess(window.location.origin + '/events')
+  statusEl.innerText = 'Running'
+  // const stream = ess(window.location.origin + '/events/p2p-5')
+  const stream = ess('/events/p2p-5')
   stream.on('data', function (data) {
     data = JSON.parse(data)
     switch (data.type) {
       case 'close':
         console.log('Finished')
+        statusEl.innerText = 'Finished'
         return stream.destroy()
       // case 'key': return stats.onkey(data)
       // case 'peer-update': return stats.onpeerupdate(data)
@@ -196,9 +200,12 @@ startBtn.addEventListener('click', () => {
 const resetBtn = document.getElementById('resetBtn')
 resetBtn.addEventListener('click', () => {
   console.log('Resetting')
+  statusEl.innerText = 'Resetting'
+
   fetch('/reset', {method: 'POST'})
   .then(response => response.text())
   .then(text => {
     alert(text)
+    setTimeout(() => location.reload(), 3000)
   })
 })

@@ -4,7 +4,6 @@ const fs = require('fs')
 const path = require('path')
 const http = require('http')
 const {exec} = require('child_process')
-const runReplicate = require('./mininet-daemon/replicate-150mb')
 
 const server = http.createServer(handler)
 server.listen(process.env.PORT || 5000, '0.0.0.0')
@@ -21,7 +20,8 @@ function handler (req, res) {
   console.log('Jim req url', req.url)
   if (req.url === '/') return file('index.html', 'text/html', res)
   if (req.url === '/bundle.js') return file('bundle.js', 'text/javascript', res)
-  if (req.url === '/events') {
+  if (req.url === '/events/p2p-5') {
+    const runReplicate = require('./mininet-daemon/replicate-150mb')
     if (running) return
     running = true
     // event stream
@@ -47,6 +47,7 @@ function handler (req, res) {
       }
       console.log(stdout + stderr)
       res.end(stdout + stderr)
+      setTimeout(() => process.exit(0), 1000)
     })
   }
 }

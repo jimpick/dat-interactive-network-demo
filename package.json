@@ -29,7 +29,8 @@
   "scripts": {
     "build": "browserify -d app.js -o bundle.js",
     "watch": "watchify -d app.js -o bundle.js -v",
-    "make-fixture": "mkdir -p fixtures/dat2-150mb && dd if=/dev/urandom of=fixtures/dat2-150mb/150mb.bin bs=1000000 count=150"
+    "make-fixture": "mkdir -p fixtures/dat2-150mb && dd if=/dev/urandom of=fixtures/dat2-150mb/150mb.bin bs=1000000 count=150",
+    "start": "while true; do node server.js ; sleep 1 ; done"
   },
   "keywords": [],
   "author": "Jim Pick (@jimpick)",
