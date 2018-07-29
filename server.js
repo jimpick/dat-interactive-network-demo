@@ -49,6 +49,7 @@ function handler (req, res) {
       }
       console.log(stdout + stderr)
       res.end(stdout + stderr)
+      console.log('Restarting server...\n')
       setTimeout(() => process.exit(0), 2000)
     })
   }

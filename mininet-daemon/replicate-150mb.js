@@ -1,8 +1,17 @@
 const path = require('path')
+const thunky = require('thunky')
 const supervisor = require('./mnSupervisor')
 
 module.exports = run
 
+function runInSeries (fns, done) {
+  loop(null)
+
+  function loop (err) {
+    if (fns.length === 0 || err) return done(err)
+    fns.shift()(loop)
+  }
+}
 
 function run (numNodes, sendTelemetry, finishedCallback) {
   console.log(`Starting replication, ${numNodes} nodes`)
@@ -14,6 +23,8 @@ function run (numNodes, sendTelemetry, finishedCallback) {
   supervisor.on('message', handleSupervisorMessage)
 
   supervisor.start(startNode => {
+    let key
+
     // Server: h1
     const {h1} = nodes
     startNode(h1, function () {
@@ -26,17 +37,46 @@ function run (numNodes, sendTelemetry, finishedCallback) {
 
         var network = dat.joinNetwork()
 
-        setTimeout(() => {
-          h1.emit('sharing', {key: dat.key.toString('hex')})
-        }, 1000)
+        h1.emit('sharing', {key: dat.key.toString('hex')})
       })
     })
 
-    // Clients: h2, h3, h4, h5, ...
-    Object.keys(nodes)
-    .filter(name => (name[0] === 'h') && (name !== 'h1'))
-    .forEach(name => {
-      console.log('Starting node', name)
+    const ready = thunky(waitForKey)
+
+    function waitForKey (cb) {
+      supervisor.mininet.on('message', watchForSharing)
+
+      function watchForSharing (name, data) {
+        const match = name.match(/h1:emit/)
+        if (match && data[0] === 'sharing') {
+          supervisor.mininet.removeListener('message', watchForSharing)
+          console.log('Jim h1 message', data)
+          key = data[1].key
+          cb()
+        }
+      }
+    }
+
+    ready(() => {
+      // Clients: h2, h3, h4, h5, ...
+      const fns = Object.keys(nodes)
+      .filter(name => (name[0] === 'h') && (name !== 'h1'))
+      .map(name => {
+        return cb => addNode(name, cb)
+      })
+      runInSeries(fns, () => { console.log('All nodes started.') })
+    })
+
+    return function addOneMore () {
+      ready(() => {
+        const hNodes = Object.keys(nodes).filter(name => name[0] === 'h')
+        const nextName = 'h' + hNodes.length + 1
+        addNode(nextName, () => { console.log('Added', nextName) })
+      })
+    }
+
+		function addNode (name, cb) {
+      console.log('Starting node', name, key)
       const funcTemplate = function () {
         var Dat = require('dat-node')
         var tempy = require('tempy')
@@ -44,33 +84,35 @@ function run (numNodes, sendTelemetry, finishedCallback) {
 
         var dir = tempy.directory()
 
-        h1.on('sharing', ({key}) => {
-          Dat(dir, {key: key, temp: true}, function (err, dat) {
-            if (err) throw err
+        console.log('Jim key', key)
+        Dat(dir, {key: key, temp: true}, function (err, dat) {
+          if (err) throw err
 
-            var archive = dat.archive
-            archive.id = 'hreplace'
-            statsServer(archive, 0.5, (message, args) => {
-              hreplace.emit(message, args)
-            })
-
-            if (archive.content) contentReady()
-            archive.once('content', contentReady)
-
-            function contentReady () {
-              supervisor.log('hreplace content ready')
-              archive.content.on('sync', function () {
-                supervisor.log('hreplace dat synced')
-              })
-            }
+          var archive = dat.archive
+          archive.id = 'hreplace'
+          statsServer(archive, 0.5, (message, args) => {
+            hreplace.emit(message, args)
           })
+
+          if (archive.content) contentReady()
+          archive.once('content', contentReady)
+
+          function contentReady () {
+            supervisor.log('hreplace content ready')
+            archive.content.on('sync', function () {
+              supervisor.log('hreplace dat synced')
+            })
+          }
         })
       }
       const funcString = funcTemplate.toString().replace(/hreplace/g, name)
-      const src = `;var statsServerPath = '${statsServerPath}';\n` +
+      const src =
+        `;var statsServerPath = '${statsServerPath}';\n` +
+        `;var key = '${key}';\n` +
         '(\n' + funcString + '\n' + ')()'
       startNode(nodes[name], src)
-    })
+			setTimeout(cb, 100)
+    }
   })
 
   function handleHostMessage (name, data) {
