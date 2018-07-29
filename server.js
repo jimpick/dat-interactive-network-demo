@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
-var fs = require('fs')
-var path = require('path')
-var http = require('http')
-var runReplicate = require('./mininet-daemon/replicate-150mb')
+const fs = require('fs')
+const path = require('path')
+const http = require('http')
+const {exec} = require('child_process')
+const runReplicate = require('./mininet-daemon/replicate-150mb')
 
-var server = http.createServer(handler)
+const server = http.createServer(handler)
 server.listen(process.env.PORT || 5000, '0.0.0.0')
 server.once('error', function () {
   server.listen(0)
@@ -14,11 +15,15 @@ server.on('listening', function () {
   console.log('Stats listening on port ' + server.address().port)
 })
 
+let running = false
+
 function handler (req, res) {
   console.log('Jim req url', req.url)
   if (req.url === '/') return file('index.html', 'text/html', res)
   if (req.url === '/bundle.js') return file('bundle.js', 'text/javascript', res)
   if (req.url === '/events') {
+    if (running) return
+    running = true
     // event stream
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
     runReplicate(sendTelemetry, finished)
@@ -30,7 +35,19 @@ function handler (req, res) {
     function finished () {
       console.log('Finished')
       res.end('data: {"type": "close"}\n\n')
+      running = false
     }
+  }
+  if (req.url === '/reset' && req.method === 'POST') {
+    exec('sudo mn -c', (err, stdout, stderr) => {
+      if (err) {
+        console.error('Reset Error', err)
+        res.end('Error')
+        return
+      }
+      console.log(stdout + stderr)
+      res.end(stdout + stderr)
+    })
   }
 }
 

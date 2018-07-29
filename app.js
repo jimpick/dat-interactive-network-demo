@@ -44,6 +44,9 @@ function updateViz () {
   var upload = uploadSpeed() / 3000
   var download = downloadSpeed() / 3000
   // console.log('Jim', upload, download)
+  const nodes = []
+  const peers = {}
+  /*
   const nodes = [
     {
       name: 'h1',
@@ -53,6 +56,7 @@ function updateViz () {
   const peers = {
     'h1': nodes[0]
   }
+  */
   const connections = []
   const fresh = Date.now() - updateTime < 1500
   Object.keys(peerSpeeds).forEach(key => {
@@ -186,5 +190,15 @@ startBtn.addEventListener('click', () => {
         }
         return
     }
+  })
+})
+
+const resetBtn = document.getElementById('resetBtn')
+resetBtn.addEventListener('click', () => {
+  console.log('Resetting')
+  fetch('/reset', {method: 'POST'})
+  .then(response => response.text())
+  .then(text => {
+    alert(text)
   })
 })
