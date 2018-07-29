@@ -143,17 +143,23 @@ setInterval(updateViz, 1000)
 
 const startBtn = document.getElementById('startBtn')
 const statusEl = document.getElementById('status')
+const resetBtn = document.getElementById('resetBtn')
+
 startBtn.addEventListener('click', () => {
   console.log('Running')
   statusEl.innerText = 'Running'
+  startBtn.disabled = true
+  resetBtn.disabled = true
   // const stream = ess(window.location.origin + '/events/p2p-5')
-  const stream = ess('/events/p2p-5')
+  const stream = ess('/events/p2p-7')
   stream.on('data', function (data) {
     data = JSON.parse(data)
     switch (data.type) {
       case 'close':
         console.log('Finished')
         statusEl.innerText = 'Finished'
+        startBtn.disabled = false
+        resetBtn.disabled = false
         return stream.destroy()
       // case 'key': return stats.onkey(data)
       // case 'peer-update': return stats.onpeerupdate(data)
@@ -197,9 +203,10 @@ startBtn.addEventListener('click', () => {
   })
 })
 
-const resetBtn = document.getElementById('resetBtn')
 resetBtn.addEventListener('click', () => {
   console.log('Resetting')
+  startBtn.disabled = true
+  resetBtn.disabled = true
   statusEl.innerText = 'Resetting'
 
   fetch('/reset', {method: 'POST'})

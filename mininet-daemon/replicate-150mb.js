@@ -3,10 +3,10 @@ const supervisor = require('./mnSupervisor')
 
 module.exports = run
 
-var {h1, h2, h3, h4, h5} = supervisor.basicTopology(5, {bandwidth: 100}) // 100mbit
 
-function run (sendTelemetry, finishedCallback) {
-  console.log('Starting replication')
+function run (numNodes, sendTelemetry, finishedCallback) {
+  console.log(`Starting replication, ${numNodes} nodes`)
+  const nodes = supervisor.basicTopology(numNodes, {bandwidth: 100}) // 100mbit
   let finished = false
   var statsServerPath = path.resolve(__dirname, './hypercore-stats-server')
 
@@ -14,8 +14,29 @@ function run (sendTelemetry, finishedCallback) {
   supervisor.on('message', handleSupervisorMessage)
 
   supervisor.start(startNode => {
-    // Clients: h2, h3, h4, h5
-    ['h2', 'h3', 'h4', 'h5'].forEach(name => {
+    // Server: h1
+    const {h1} = nodes
+    startNode(h1, function () {
+      var Dat = require('dat-node')
+      var path = require('path')
+      var fixture = path.join(__dirname, '../fixtures/dat2-150mb')
+      Dat(fixture, {temp: true}, function (err, dat) {
+        if (err) throw err
+        dat.importFiles()
+
+        var network = dat.joinNetwork()
+
+        setTimeout(() => {
+          h1.emit('sharing', {key: dat.key.toString('hex')})
+        }, 1000)
+      })
+    })
+
+    // Clients: h2, h3, h4, h5, ...
+    Object.keys(nodes)
+    .filter(name => (name[0] === 'h') && (name !== 'h1'))
+    .forEach(name => {
+      console.log('Starting node', name)
       const funcTemplate = function () {
         var Dat = require('dat-node')
         var tempy = require('tempy')
@@ -48,27 +69,12 @@ function run (sendTelemetry, finishedCallback) {
       const funcString = funcTemplate.toString().replace(/hreplace/g, name)
       const src = `;var statsServerPath = '${statsServerPath}';\n` +
         '(\n' + funcString + '\n' + ')()'
-      startNode(eval(name), src)
-    })
-
-    // Server: h1
-    startNode(h1, function () {
-      var Dat = require('dat-node')
-      var path = require('path')
-      var fixture = path.join(__dirname, '../fixtures/dat2-150mb')
-      Dat(fixture, {temp: true}, function (err, dat) {
-        if (err) throw err
-        dat.importFiles()
-
-        var network = dat.joinNetwork()
-
-        h1.emit('sharing', {key: dat.key.toString('hex')})
-      })
+      startNode(nodes[name], src)
     })
   })
 
   function handleHostMessage (name, data) {
-    const match = name.match(/(h[\d+]):emit/)
+    const match = name.match(/(h\d+):emit/)
     if (match && data[0] === 'telemetry') {
       if (finished) return
       const message = {

@@ -20,13 +20,15 @@ function handler (req, res) {
   console.log('Jim req url', req.url)
   if (req.url === '/') return file('index.html', 'text/html', res)
   if (req.url === '/bundle.js') return file('bundle.js', 'text/javascript', res)
-  if (req.url === '/events/p2p-5') {
+  const match1 = req.url.match(/\/events\/p2p-(\d+)/)
+  if (match1) {
+    const numNodes = match1[1]
     const runReplicate = require('./mininet-daemon/replicate-150mb')
     if (running) return
     running = true
     // event stream
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
-    runReplicate(sendTelemetry, finished)
+    runReplicate(numNodes, sendTelemetry, finished)
 
     function sendTelemetry (event) {
       res.write('data: ' + JSON.stringify(event) + '\n\n')
@@ -47,7 +49,7 @@ function handler (req, res) {
       }
       console.log(stdout + stderr)
       res.end(stdout + stderr)
-      setTimeout(() => process.exit(0), 1000)
+      setTimeout(() => process.exit(0), 2000)
     })
   }
 }
