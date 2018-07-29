@@ -144,6 +144,7 @@ setInterval(updateViz, 1000)
 const startBtn = document.getElementById('startBtn')
 const statusEl = document.getElementById('status')
 const resetBtn = document.getElementById('resetBtn')
+const experimentSelEl = document.getElementById('experiment')
 
 startBtn.addEventListener('click', () => {
   console.log('Running')
@@ -151,7 +152,7 @@ startBtn.addEventListener('click', () => {
   startBtn.disabled = true
   resetBtn.disabled = true
   // const stream = ess(window.location.origin + '/events/p2p-5')
-  const stream = ess('/events/p2p-7')
+  const stream = ess('/events/' + experimentSelEl.value)
   stream.on('data', function (data) {
     data = JSON.parse(data)
     switch (data.type) {
