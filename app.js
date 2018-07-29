@@ -11,6 +11,34 @@ var peerIdToHostMap = {}
 var updateTime = null
 
 var viz = new Vizceral.default(document.getElementById('vizceral'))
+viz.updateDefinitions({
+	detailedNode: {
+		volume: {
+			default: {
+				top: { header: 'Jim RPS', data: 'data.volumePercent', format: '0.0%' },
+				bottom: { header: 'ERROR RATE', data: 'data.classPercents.danger', format: '0.00%' },
+				donut: {
+					data: 'data.globalClassPercents',
+					indices: [
+						{ key: 'danger' },
+						{ key: 'warning' },
+						{ key: 'normal', class: 'normalDonut' }
+					]
+				},
+				arc: {}
+			},
+			labeled: {
+				top: { header: 'RPS', data: 'data.volume', format: '0,0' },
+				donut: {
+					data: 'data.classPercents'
+				}
+			},
+			entry: {
+				top: { header: 'TOTAL RPS', data: 'data.volume', format: '0,0' }
+			}
+		}
+	}
+})
 
 function updateViz () {
   var upload = uploadSpeed() / 3000
@@ -71,9 +99,10 @@ function updateViz () {
   */
   viz.updateData({
     name: 'dat',
-    renderer: 'global',
+    // renderer: 'global',
+    renderer: 'swarm',
     layout: 'ring',
-    // maxVolume: 500,
+    // maxVolume: 10,
     nodes,
     connections
   })
@@ -83,6 +112,10 @@ window.addEventListener('load', () => {
   updateViz()
   viz.setView()
   viz.animate()
+  viz.setOptions({
+   allowDraggingOfNodes: true,
+   // showLabels: false
+  })
   /*
   viz.currentGraph.setPhysicsOptions({
     isEnabled: true,
