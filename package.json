@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "dependencies": {
-    "@jimpick/vizceral-dat": "^4.6.0",
+    "@jimpick/vizceral-dat": "4.6.0-2",
     "babel-preset-env": "^1.7.0",
     "browserify": "^16.1.1",
     "corsify": "^2.1.0",
@@ -19,6 +19,8 @@
     "through2": "^2.0.3"
   },
   "devDependencies": {
+    "babelify": "^8.0.0",
+    "brfs-babel": "^1.0.0",
     "hypercore": "^6.13.0",
     "hyperdiscovery": "^7.0.0",
     "hyperdrive": "^9.12.3",

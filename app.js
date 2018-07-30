@@ -40,23 +40,23 @@ viz.updateDefinitions({
 	}
 })
 
+const nodes = []
+const peers = {}
+
+function ensureNode (name) {
+  if (peers[name]) return
+  const newNode = {
+    name,
+    nodes: [{}]
+  }
+  nodes.push(newNode)
+  peers[name] = newNode
+}
+
 function updateViz () {
   var upload = uploadSpeed() / 3000
   var download = downloadSpeed() / 3000
   // console.log('Jim', upload, download)
-  const nodes = []
-  const peers = {}
-  /*
-  const nodes = [
-    {
-      name: 'h1',
-      nodes: [{}]
-    }
-  ]
-  const peers = {
-    'h1': nodes[0]
-  }
-  */
   const connections = []
   const fresh = Date.now() - updateTime < 1500
   Object.keys(peerSpeeds).forEach(key => {
@@ -83,16 +83,6 @@ function updateViz () {
         metadata: { streaming: true }
       })
     }
-
-    function ensureNode (name) {
-      if (peers[name]) return
-      const newNode = {
-        name,
-        nodes: [{}]
-      }
-      nodes.push(newNode)
-      peers[name] = newNode
-    }
   })
 
   /*
@@ -118,7 +108,7 @@ window.addEventListener('load', () => {
   viz.animate()
   viz.setOptions({
    allowDraggingOfNodes: true,
-   // showLabels: false
+   showLabels: true
   })
   /*
   viz.currentGraph.setPhysicsOptions({
@@ -211,6 +201,7 @@ startBtn.addEventListener('click', () => {
 addNodeBtn.addEventListener('click', () => {
   console.log('Adding...')
   statusEl.innerText = 'Adding...'
+  ensureNode('h' + (nodes.length + 1))
 
   fetch('/addNode', {method: 'POST'})
   .then(response => response.text())
