@@ -41,7 +41,8 @@ function run (numNodes, sendTelemetry, finishedCallback) {
       const discSwarm = require('discovery-swarm')
       const mswarm = require('hypercore-multicast-swarm')
 
-      const clock = hyperclock(ram, {interval: 500})
+      // const clock = hyperclock(ram, {interval: 500})
+      const clock = hyperclock(ram, {interval: 2000})
 
       clock.ready(() => {
         h1.emit('sharing', {key: clock.key.toString('hex')})
@@ -122,35 +123,12 @@ function run (numNodes, sendTelemetry, finishedCallback) {
         const ram = require('random-access-memory')
         const swarmDefaults = require('dat-swarm-defaults')
         const discSwarm = require('discovery-swarm')
+        const mswarm = require('hypercore-multicast-swarm')
 				const crypto = require('hypercore-crypto')
         const statsServer = require(statsServerPath)
 
-				let mode = 'TCP only'
-
-        console.log('Jim key', key)
-				const clock = hyperclock(ram, key, {sparse: true})
-				const sw = discSwarm(swarmDefaults({
-					live: true,
-					hash: false,
-          stream: () => clock.replicate({
-            live: true,
-            upload: true,
-            download: true
-          })
-				}))
-
-				const discoveryKey = crypto.discoveryKey(key)
-				sw.join(discoveryKey)
-
-        /*
-				sw.on('connection', function (peer, info) {
-					console.log('new connection', info.host, info.port,
-											info.initiator ? 'outgoing' : 'incoming')
-					peer.on('close', function () {
-						console.log('peer disconnected')
-					})
-				})
-        */
+        console.log('Key:', key)
+				const clock = hyperclock(ram, key, {sparse: true, allowPush: true})
 
 				// Display clock
 				clock.ready(() => {
@@ -161,10 +139,57 @@ function run (numNodes, sendTelemetry, finishedCallback) {
             hreplace.emit(message, args)
           })
 
+				  let mode = 'Bootstrapping (TCP/uTP)'
+
+					let streamCount = 0
+          const sw = discSwarm(swarmDefaults({
+            live: true,
+            hash: false,
+            stream: info => {
+							const stream = clock.replicate({
+								live: true,
+								upload: true,
+								download: true
+							})
+							const streamNumber = ++streamCount
+							console.log('New swarm stream', streamNumber, info)
+							stream.on('close', () => {
+								console.log('Closed stream', streamNumber)
+							})
+							return stream
+						}
+          }))
+
+          const discoveryKey = crypto.discoveryKey(key)
+          sw.join(discoveryKey)
+
+          /*
+          sw.on('connection', function (peer, info) {
+            console.log('new connection', info.host, info.port,
+                        info.initiator ? 'outgoing' : 'incoming')
+            peer.on('close', function () {
+              console.log('peer disconnected')
+            })
+          })
+          */
+
+					setTimeout(() => {
+						console.log('Closing TCP swarm')
+						sw.close()
+						mode = 'Multicast only'
+					}, 4000)
+
+					// UDP Multicast
+					const msw = mswarm(clock, {
+						mtu: 900,
+						port: 5007,
+						address: '239.0.0.1'
+					})
+
 					clock.update(() => {
 						console.log('Length', clock.length)
 						clock.createReadStream({live: true, tail: true}).on('data', data => {
-							// console.log(`${mode}: ${data.time}`)
+							console.log(`${mode}: ${data.time}`)
 						})
 					})
 				})
