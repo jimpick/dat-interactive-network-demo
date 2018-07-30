@@ -146,46 +146,6 @@ function run (numNodes, sendTelemetry, finishedCallback) {
             hreplace.emit(message, args)
           })
 
-          /*
-					let streamCount = 0
-          const sw = discSwarm(swarmDefaults({
-						tcp: true,
-						utp: false,
-						dht: false,
-						live: true,
-						hash: false,
-						dns: {
-							server: null, domain: 'dat.local'
-						},
-            stream: info => {
-							const stream = clock.replicate({
-								live: true,
-								upload: true,
-								download: true
-							})
-							const streamNumber = ++streamCount
-							console.log('New swarm stream', streamNumber, info)
-							stream.on('close', () => {
-								console.log('Closed stream', streamNumber)
-							})
-							return stream
-						}
-          }))
-
-          const discoveryKey = crypto.discoveryKey(key)
-          sw.join(discoveryKey)
-
-					console.log('Jim1')
-          sw.on('connection', function (peer, info) {
-						console.log('Jim2')
-            console.log('new connection', info.host, info.port,
-                        info.initiator ? 'outgoing' : 'incoming')
-            peer.on('close', function () {
-              console.log('peer disconnected')
-            })
-          })
-					*/
-
 					// UDP Multicast
 					const msw = mswarm(clock, {
 						mtu: 900,

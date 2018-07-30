@@ -8,7 +8,6 @@ var uploadSpeed = speedometer()
 var downloadSpeed = speedometer()
 let peerSpeeds = {}
 var peerIdToHostMap = {}
-var updateTime = null
 
 var viz = new Vizceral.default(document.getElementById('vizceral'))
 viz.updateDefinitions({
@@ -55,11 +54,11 @@ function ensureNode (name) {
 }
 
 function updateViz () {
-  var upload = uploadSpeed() / scaleFactor
-  var download = downloadSpeed() / scaleFactor
+  // var upload = uploadSpeed() / scaleFactor
+  // var download = downloadSpeed() / scaleFactor
   // console.log('Jim', upload, download)
   const connections = []
-  const fresh = Date.now() - updateTime < 1500
+  const now = Date.now()
   Object.keys(peerSpeeds).forEach(key => {
     const match = key.match(/(h\d+)-(h\d+)/)
     if (match) {
@@ -69,19 +68,23 @@ function updateViz () {
       ensureNode(remotePeer)
       if (remotePeer === observerPeer) return
       // FIXME: These will get doubled up when observed from both ends
-      const {uploadSpeed, downloadSpeed} = peerSpeeds[key]
+      let {uploadSpeed, downloadSpeed, timestamp} = peerSpeeds[key]
+      if (!timestamp || timestamp < now - 1500) {
+        uploadSpeed = 0
+        downloadSpeed = 0
+      }
       // console.log('Jim peerSpeeds', key, peerSpeeds[key])
       connections.push({
         source: observerPeer,
         target: remotePeer,
-        metrics: { normal: fresh ? uploadSpeed / scaleFactor : 0 },
-        metadata: { streaming: true }
+        metrics: {normal: uploadSpeed / scaleFactor},
+        metadata: {streaming: true}
       })
       connections.push({
         source: remotePeer,
         target: observerPeer,
-        metrics: { normal: fresh ? downloadSpeed / scaleFactor : 0 },
-        metadata: { streaming: true }
+        metrics: {normal: downloadSpeed / scaleFactor},
+        metadata: {streaming: true}
       })
     }
   })
@@ -186,10 +189,10 @@ startBtn.addEventListener('click', () => {
             uploadSpeed,
             downloadSpeed,
             have,
-            length
+            length,
+            timestamp: Date.now()
           }
         })
-        updateTime = Date.now()
         return
       case 'peerIdToHostMap':
         {
