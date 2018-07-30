@@ -39,7 +39,6 @@ module.exports = function (feed, wait, emit) {
         track(archive.content, 'content')
       })
     }
-
   }
 
   /*
@@ -54,8 +53,10 @@ module.exports = function (feed, wait, emit) {
 
     feed.on('update', onupdate)
     // feed.on('append', onupdate)
-    feed.on('download', ondownload)
-    feed.on('upload', onupload)
+    
+    // Disable temporarily - should do dynamic tracing
+    // feed.on('download', ondownload)
+    // feed.on('upload', onupload)
 
     /*
     res.on('close', function () {
@@ -106,11 +107,11 @@ module.exports = function (feed, wait, emit) {
     const opts = {
       live: true,
       stream: () => {
-        const stream = archive.replicate()
+        const stream = target.replicate()
         const hex = stream.id.toString('hex')
         if (!streamIdToNameMap[hex]) {
-          streamIdToNameMap[hex] = archive.id
-          send({type: 'peerIdToHostMap', peerId: hex, host: archive.id})
+          streamIdToNameMap[hex] = target.id
+          send({type: 'peerIdToHostMap', peerId: hex, host: target.id})
         }
         return stream
       },
@@ -153,12 +154,14 @@ module.exports = function (feed, wait, emit) {
       }
     }
     var sw = hyperdiscovery(target, opts)
+    /*
     sw.on('connection', function (peer, info) {
       console.log('connected to', sw.connections.length, 'peers')
       peer.on('close', function () {
         console.log('peer disconnected')
       })
     })
+    */
     var health = Health(target)
     setInterval(getHealth, 1000)
     function getHealth () {

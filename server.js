@@ -41,6 +41,26 @@ function handler (req, res) {
       running = false
     }
   }
+  const match2 = req.url.match(/\/events\/multicast-(\d+)/)
+  if (match2) {
+    const numNodes = match2[1]
+    const runReplicate = require('./mininet-daemon/hyperclock-multicast')
+    if (running) return
+    running = true
+    // event stream
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+    addNode = runReplicate(numNodes, sendTelemetry, finished)
+
+    function sendTelemetry (event) {
+      res.write('data: ' + JSON.stringify(event) + '\n\n')
+    }
+
+    function finished () {
+      console.log('Finished')
+      res.end('data: {"type": "close"}\n\n')
+      running = false
+    }
+  }
   if (req.url === '/addNode' && req.method === 'POST') {
     if (!addNode) return res.end('Not ready yet')
     addNode()

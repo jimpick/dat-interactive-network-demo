@@ -42,6 +42,7 @@ viz.updateDefinitions({
 
 const nodes = []
 const peers = {}
+let scaleFactor = 3000
 
 function ensureNode (name) {
   if (peers[name]) return
@@ -54,8 +55,8 @@ function ensureNode (name) {
 }
 
 function updateViz () {
-  var upload = uploadSpeed() / 3000
-  var download = downloadSpeed() / 3000
+  var upload = uploadSpeed() / scaleFactor
+  var download = downloadSpeed() / scaleFactor
   // console.log('Jim', upload, download)
   const connections = []
   const fresh = Date.now() - updateTime < 1500
@@ -73,13 +74,13 @@ function updateViz () {
       connections.push({
         source: observerPeer,
         target: remotePeer,
-        metrics: { normal: fresh ? uploadSpeed / 3000 : 0 },
+        metrics: { normal: fresh ? uploadSpeed / scaleFactor : 0 },
         metadata: { streaming: true }
       })
       connections.push({
         source: remotePeer,
         target: observerPeer,
-        metrics: { normal: fresh ? downloadSpeed / 3000 : 0 },
+        metrics: { normal: fresh ? downloadSpeed / scaleFactor : 0 },
         metadata: { streaming: true }
       })
     }
@@ -139,13 +140,16 @@ const experimentSelEl = document.getElementById('experiment')
 addNodeBtn.disabled = true
 
 startBtn.addEventListener('click', () => {
-  console.log('Running')
+  const experiment = experimentSelEl.value
+  console.log('Running', experiment)
   statusEl.innerText = 'Running'
   startBtn.disabled = true
   addNodeBtn.disabled = false
   resetBtn.disabled = true
+  scaleFactor = 3000
+  if (experiment.match(/multicast/)) scaleFactor = 0.3
   // const stream = ess(window.location.origin + '/events/p2p-5')
-  const stream = ess('/events/' + experimentSelEl.value)
+  const stream = ess('/events/' + experiment)
   stream.on('data', function (data) {
     data = JSON.parse(data)
     switch (data.type) {
@@ -201,7 +205,11 @@ startBtn.addEventListener('click', () => {
 addNodeBtn.addEventListener('click', () => {
   console.log('Adding...')
   statusEl.innerText = 'Adding...'
-  ensureNode('h' + (nodes.length + 1))
+  peerSpeeds[`h${nodes.length + 1}-h1`] = {
+    uploadSpeed: 0,
+    downloadSpeed: 0
+  }
+  updateViz()
 
   fetch('/addNode', {method: 'POST'})
   .then(response => response.text())
