@@ -2,6 +2,9 @@ module.exports = function (feed) {
 
   function get () {
     if (feed.content) feed = feed.content
+    if (!feed.peers) {
+      // console.log('Jim2')
+    }
     if (!feed || !feed.peers) return
     feed.update()
     var length = feed.length

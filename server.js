@@ -15,6 +15,7 @@ server.on('listening', function () {
 })
 
 let running = false
+let addNode
 
 function handler (req, res) {
   console.log('Jim req url', req.url)
@@ -28,7 +29,7 @@ function handler (req, res) {
     running = true
     // event stream
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
-    runReplicate(numNodes, sendTelemetry, finished)
+    addNode = runReplicate(numNodes, sendTelemetry, finished)
 
     function sendTelemetry (event) {
       res.write('data: ' + JSON.stringify(event) + '\n\n')
@@ -39,6 +40,11 @@ function handler (req, res) {
       res.end('data: {"type": "close"}\n\n')
       running = false
     }
+  }
+  if (req.url === '/addNode' && req.method === 'POST') {
+    if (!addNode) return res.end('Not ready yet')
+    addNode()
+    res.end('Node added')
   }
   if (req.url === '/reset' && req.method === 'POST') {
     exec('sudo mn -c', (err, stdout, stderr) => {

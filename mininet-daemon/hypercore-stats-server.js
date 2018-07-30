@@ -163,6 +163,7 @@ module.exports = function (feed, wait, emit) {
     setInterval(getHealth, 1000)
     function getHealth () {
       var data = health.get()
+      if (!data) return
       if (data.peers) {
         data.peers.forEach(peer => {
           const remoteId = peer.remoteId

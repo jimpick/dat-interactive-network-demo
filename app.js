@@ -142,14 +142,17 @@ setInterval(updateViz, 1000)
 // var stats = Stats(document.getElementById('hypercore-stats'))
 
 const startBtn = document.getElementById('startBtn')
+const addNodeBtn = document.getElementById('addNodeBtn')
 const statusEl = document.getElementById('status')
 const resetBtn = document.getElementById('resetBtn')
 const experimentSelEl = document.getElementById('experiment')
+addNodeBtn.disabled = true
 
 startBtn.addEventListener('click', () => {
   console.log('Running')
   statusEl.innerText = 'Running'
   startBtn.disabled = true
+  addNodeBtn.disabled = false
   resetBtn.disabled = true
   // const stream = ess(window.location.origin + '/events/p2p-5')
   const stream = ess('/events/' + experimentSelEl.value)
@@ -161,6 +164,7 @@ startBtn.addEventListener('click', () => {
         statusEl.innerText = 'Finished'
         startBtn.disabled = false
         resetBtn.disabled = false
+        addNodeBtn.disabled = true
         return stream.destroy()
       // case 'key': return stats.onkey(data)
       // case 'peer-update': return stats.onpeerupdate(data)
@@ -204,12 +208,23 @@ startBtn.addEventListener('click', () => {
   })
 })
 
+addNodeBtn.addEventListener('click', () => {
+  console.log('Adding...')
+  statusEl.innerText = 'Adding...'
+
+  fetch('/addNode', {method: 'POST'})
+  .then(response => response.text())
+  .then(text => {
+    statusEl.innerText = text
+  })
+})
+
 resetBtn.addEventListener('click', () => {
   console.log('Resetting')
   startBtn.disabled = true
   resetBtn.disabled = true
+  addNodeBtn.disabled = true
   statusEl.innerText = 'Resetting'
-
   fetch('/reset', {method: 'POST'})
   .then(response => response.text())
   .then(text => {
