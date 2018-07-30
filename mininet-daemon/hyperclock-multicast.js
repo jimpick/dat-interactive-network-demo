@@ -39,8 +39,10 @@ function run (numNodes, sendTelemetry, finishedCallback) {
       const ram = require('random-access-memory')
       const swarmDefaults = require('dat-swarm-defaults')
       const discSwarm = require('discovery-swarm')
+      const mswarm = require('hypercore-multicast-swarm')
 
       const clock = hyperclock(ram, {interval: 500})
+
       clock.ready(() => {
         h1.emit('sharing', {key: clock.key.toString('hex')})
 
@@ -64,8 +66,19 @@ function run (numNodes, sendTelemetry, finishedCallback) {
           })
         })
         */
+
+        const msw = mswarm(clock, {
+          mtu: 900,
+          port: 5007,
+          address: '239.0.0.1'
+        })
+
+        clock.on('append', () => msw.multicast(clock.length - 1))
       })
     })
+    const h1AddRouteMulticast = 
+      `route add -net 224.0.0.0 netmask 240.0.0.0 dev h1-eth0`
+    h1.exec(h1AddRouteMulticast, console.error)
 
     ready = thunky(waitForKey)
 
@@ -161,8 +174,14 @@ function run (numNodes, sendTelemetry, finishedCallback) {
         `;var statsServerPath = '${statsServerPath}';\n` +
         `;var key = '${key}';\n` +
         '(\n' + funcString + '\n' + ')()'
-      startNode(nodes[name], src)
-			setTimeout(cb, 100)
+      const host = nodes[name]
+      startNode(host, src)
+      const addRouteMulticast = 
+        `route add -net 224.0.0.0 netmask 240.0.0.0 dev ${name}-eth0`
+      host.exec(addRouteMulticast, err => {
+        if (err) console.error('Multicast route error', name, err)
+			  setTimeout(cb, 100)
+      })
     }
   })
 

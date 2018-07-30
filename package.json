@@ -13,6 +13,7 @@
     "discovery-swarm": "^5.1.2",
     "event-source-stream": "^1.5.0",
     "hyperclock": "^1.0.0",
+    "hypercore-multicast-swarm": "^2.0.0",
     "mininet": "jimpick/mininet#vizceral",
     "pretty-bytes": "^4.0.2",
     "pretty-hash": "^1.0.1",
