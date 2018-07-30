@@ -1,3 +1,5 @@
+var events = require('events')
+var util = require('util')
 var Health = require('./hyperhealth')
 var hyperdiscovery = require('hyperdiscovery')
 var speedometer = require('speedometer')
@@ -5,7 +7,14 @@ var pump = require('pump')
 var through2 = require('through2')
 var prettyHash = require('pretty-hash')
 
-module.exports = function (feed, wait, emit) {
+module.exports = StatsServer
+
+function StatsServer (feed, wait, emit) {
+  if (!(this instanceof StatsServer)) return new StatsServer(feed, wait, emit)
+
+  events.EventEmitter.call(this)
+  self = this
+
   var archive = feed.metadata ? feed : null
 
   const streamIdToNameMap = {}
@@ -154,14 +163,17 @@ module.exports = function (feed, wait, emit) {
       }
     }
     var sw = hyperdiscovery(target, opts)
-    /*
     sw.on('connection', function (peer, info) {
-      console.log('connected to', sw.connections.length, 'peers')
+      console.log('new connection', info.host, info.port,
+                  info.initiator ? 'outgoing' : 'incoming')
       peer.on('close', function () {
         console.log('peer disconnected')
       })
     })
-    */
+    self.on('close', () => {
+      console.log('Closing statsServer swarm')
+      sw.close()
+    })
     var health = Health(target)
     setInterval(getHealth, 1000)
     function getHealth () {
@@ -181,3 +193,9 @@ module.exports = function (feed, wait, emit) {
     }
   }
 }
+
+StatsServer.prototype.close = function () {
+  this.emit('close')
+}
+
+util.inherits(StatsServer, events.EventEmitter)

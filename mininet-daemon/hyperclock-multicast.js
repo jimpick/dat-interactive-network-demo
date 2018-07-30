@@ -48,8 +48,14 @@ function run (numNodes, sendTelemetry, finishedCallback) {
         h1.emit('sharing', {key: clock.key.toString('hex')})
 
         const sw = discSwarm(swarmDefaults({
-          live: true,
-          hash: false,
+					tcp: true,
+					utp: false,
+					dht: false,
+					live: true,
+					hash: false,
+					dns: {
+						server: null, domain: 'dat.local'
+					},
           stream: () => clock.replicate({
             live: true,
             upload: true,
@@ -58,7 +64,6 @@ function run (numNodes, sendTelemetry, finishedCallback) {
         }))
         sw.join(clock.discoveryKey)
 
-        /*
         sw.on('connection', function (peer, info) {
           console.log('new connection', info.host, info.port,
                       info.initiator ? 'outgoing' : 'incoming')
@@ -66,7 +71,6 @@ function run (numNodes, sendTelemetry, finishedCallback) {
             console.log('peer disconnected')
           })
         })
-        */
 
         const msw = mswarm(clock, {
           mtu: 900,
@@ -135,16 +139,24 @@ function run (numNodes, sendTelemetry, finishedCallback) {
 					console.log('Key:', clock.key.toString('hex'))
 					console.log('Discovery Key:', clock.discoveryKey.toString('hex'))
 
-          statsServer(clock, 0.5, (message, args) => {
+				  let mode = 'Bootstrapping (TCP)'
+
+          // statsServer connects to the swarm for us
+          const sw = statsServer(clock, 0.5, (message, args) => {
             hreplace.emit(message, args)
           })
 
-				  let mode = 'Bootstrapping (TCP/uTP)'
-
+          /*
 					let streamCount = 0
           const sw = discSwarm(swarmDefaults({
-            live: true,
-            hash: false,
+						tcp: true,
+						utp: false,
+						dht: false,
+						live: true,
+						hash: false,
+						dns: {
+							server: null, domain: 'dat.local'
+						},
             stream: info => {
 							const stream = clock.replicate({
 								live: true,
@@ -163,21 +175,16 @@ function run (numNodes, sendTelemetry, finishedCallback) {
           const discoveryKey = crypto.discoveryKey(key)
           sw.join(discoveryKey)
 
-          /*
+					console.log('Jim1')
           sw.on('connection', function (peer, info) {
+						console.log('Jim2')
             console.log('new connection', info.host, info.port,
                         info.initiator ? 'outgoing' : 'incoming')
             peer.on('close', function () {
               console.log('peer disconnected')
             })
           })
-          */
-
-					setTimeout(() => {
-						console.log('Closing TCP swarm')
-						sw.close()
-						mode = 'Multicast only'
-					}, 4000)
+					*/
 
 					// UDP Multicast
 					const msw = mswarm(clock, {
@@ -186,8 +193,15 @@ function run (numNodes, sendTelemetry, finishedCallback) {
 						address: '239.0.0.1'
 					})
 
+          setTimeout(() => {
+            console.log('Closing TCP swarm')
+            sw.close()
+            mode = 'Multicast only'
+          }, 4500)
+
 					clock.update(() => {
 						console.log('Length', clock.length)
+
 						clock.createReadStream({live: true, tail: true}).on('data', data => {
 							console.log(`${mode}: ${data.time}`)
 						})
@@ -233,10 +247,10 @@ function run (numNodes, sendTelemetry, finishedCallback) {
             const intf = info.intfNames[0]
             h.exec(`ifconfig ${intf}`, (err, data) => {
               if (err) {
-                console.error('ifconfig2 error', err)
+                console.error('ifconfig error', err)
                 return
               }
-              console.log('Jim ifconfig2', data)
+              console.log('Jim ifconfig', data)
               nodes[h.id] = h
               nodes.s1.attach('s1-eth' + h.id.slice(1), err => {
                 if (err) {
