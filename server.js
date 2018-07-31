@@ -4,6 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const http = require('http')
 const {exec} = require('child_process')
+const etag = require('etag')
 
 const server = http.createServer(handler)
 server.listen(process.env.PORT || 5000, '0.0.0.0')
@@ -83,8 +84,11 @@ function handler (req, res) {
 
 function file (name, type, res) {
   res.setHeader('Content-Type', type + '; charset=utf-8')
+
   fs.readFile(path.join(__dirname, name), function (err, buf) {
     if (err) return res.end()
+    res.setHeader('Cache-Control', 'max-age=3600 must-revalidate')
+    res.setHeader('ETag', etag(buf))
     res.end(buf)
   })
 }
