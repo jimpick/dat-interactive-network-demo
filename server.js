@@ -87,8 +87,8 @@ function file (name, type, res) {
 
   fs.readFile(path.join(__dirname, name), function (err, buf) {
     if (err) return res.end()
-    res.setHeader('Cache-Control', 'max-age=3600 must-revalidate')
-    res.setHeader('ETag', etag(buf))
+    // res.setHeader('Cache-Control', 'max-age=3600, must-revalidate')
+    // res.setHeader('ETag', etag(buf))
     res.end(buf)
   })
 }

@@ -60,7 +60,7 @@ function updateViz () {
   const connections = []
   const now = Date.now()
   Object.keys(peerSpeeds).forEach(key => {
-    const match = key.match(/(h\d+)-(h\d+)/)
+    const match = key.match(/(h\d+|m)-(h\d+|m)/)
     if (match) {
       const observerPeer = match[1]
       const remotePeer = match[2]
@@ -99,6 +99,7 @@ function updateViz () {
     name: 'dat',
     // renderer: 'global',
     renderer: 'swarm',
+    // layout: 'ringCenter',
     layout: 'ring',
     // maxVolume: 10,
     nodes,
@@ -150,7 +151,23 @@ startBtn.addEventListener('click', () => {
   addNodeBtn.disabled = false
   resetBtn.disabled = true
   scaleFactor = 3000
-  if (experiment.match(/multicast/)) scaleFactor = 0.3
+  match = experiment.match(/.*-(\d+)/)
+  if (!match) throw new Error('No match!')
+  const numNodes = match[1]
+  for (let i = 2; i <= numNodes; i++) {
+    peerSpeeds[`h${i}-h1`] = {
+      uploadSpeed: 0,
+      downloadSpeed: 0
+    }
+  }
+  if (experiment.match(/multicast/)) {
+    scaleFactor = 0.3
+    peerSpeeds[`m-h1`] = {
+      uploadSpeed: 0,
+      downloadSpeed: 0
+    }
+  }
+
   // const stream = ess(window.location.origin + '/events/p2p-5')
   const stream = ess('/events/' + experiment)
   stream.on('data', function (data) {
@@ -208,7 +225,9 @@ startBtn.addEventListener('click', () => {
 addNodeBtn.addEventListener('click', () => {
   console.log('Adding...')
   statusEl.innerText = 'Adding...'
-  peerSpeeds[`h${nodes.length + 1}-h1`] = {
+  const hNodes = nodes.filter(({name}) => name[0] === 'h')
+  // console.log('Jim hNodes', hNodes.length)
+  peerSpeeds[`h${hNodes.length + 1}-h1`] = {
     uploadSpeed: 0,
     downloadSpeed: 0
   }
