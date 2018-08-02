@@ -77,6 +77,15 @@ function updateViz () {
           metrics: {multicastSend: speed},
           metadata: {streaming: true}
         })
+      } else if (observerPeer === 'm') {
+        let {speed, timestamp} = peerSpeeds[key]
+        if (!timestamp || timestamp < now - 1500) speed = 0
+        connections.push({
+          source: observerPeer,
+          target: remotePeer,
+          metrics: {multicastReceive: speed},
+          metadata: {streaming: true}
+        })
       } else {
         let {uploadSpeed, downloadSpeed, timestamp} = peerSpeeds[key]
         if (!timestamp || timestamp < now - 1500) {
@@ -224,9 +233,17 @@ startBtn.addEventListener('click', () => {
         return
       case 'multicast-send':
         {
-          console.log('Jim multicast-send', data)
           const {host, speed} = data
           peerSpeeds[`${host}-m`] = {
+            speed,
+            timestamp: Date.now()
+          }
+        }
+        return
+      case 'multicast-receive':
+        {
+          const {host, speed} = data
+          peerSpeeds[`m-${host}`] = {
             speed,
             timestamp: Date.now()
           }

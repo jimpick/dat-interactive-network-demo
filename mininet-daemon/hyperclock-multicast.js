@@ -43,8 +43,8 @@ function run (numNodes, sendTelemetry, finishedCallback) {
       const mswarm = require('hypercore-multicast-swarm')
       const speedometer = require('speedometer')
 
-      // const clock = hyperclock(ram, {interval: 500})
-      const clock = hyperclock(ram, {interval: 2000})
+      const clock = hyperclock(ram, {interval: 500})
+      // const clock = hyperclock(ram, {interval: 2000})
 
       clock.ready(() => {
         h1.emit('sharing', {key: clock.key.toString('hex')})
@@ -147,6 +147,7 @@ function run (numNodes, sendTelemetry, finishedCallback) {
         const discSwarm = require('discovery-swarm')
         const mswarm = require('hypercore-multicast-swarm')
 				const crypto = require('hypercore-crypto')
+        const speedometer = require('speedometer')
         const statsServer = require(statsServerPath)
 
         console.log('Key:', key)
@@ -170,6 +171,20 @@ function run (numNodes, sendTelemetry, finishedCallback) {
 						port: 5007,
 						address: '239.0.0.1'
 					})
+
+          msw.on('ready', () => {
+            const speed = speedometer()
+            msw.cast.on('message', data => {
+              speed(data.length)
+            })
+            setInterval(() => {
+              hreplace.emit('telemetry', {
+                type: 'multicast-receive',
+                host: 'hreplace',
+                speed: speed()
+              })
+            }, 1000)
+          })
 
           setTimeout(() => {
             console.log('Closing TCP swarm')
