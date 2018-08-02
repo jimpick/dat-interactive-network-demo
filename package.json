@@ -41,5 +41,19 @@
   },
   "keywords": [],
   "author": "Jim Pick (@jimpick)",
-  "license": "MIT"
+  "license": "MIT",
+  "browserify": {
+    "debug": true,
+    "transform": [
+      "brfs-babel",
+      [
+        "babelify",
+        {
+          "presets": [
+            "env"
+          ]
+        }
+      ]
+    ]
+  }
 }

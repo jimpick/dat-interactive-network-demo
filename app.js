@@ -1,6 +1,6 @@
 var Stats = require('./hypercore-stats-ui')
 var ess = require('event-source-stream')
-var Vizceral = require('@jimpick/vizceral-dat')
+var Vizceral = require('./vizceral-dat/vizceral')
 var speedometer = require('speedometer')
 var prettyHash = require('pretty-hash')
 
@@ -8,6 +8,13 @@ var uploadSpeed = speedometer()
 var downloadSpeed = speedometer()
 let peerSpeeds = {}
 var peerIdToHostMap = {}
+let layout = 'ring'
+
+const startBtn = document.getElementById('startBtn')
+const addNodeBtn = document.getElementById('addNodeBtn')
+const statusEl = document.getElementById('status')
+const resetBtn = document.getElementById('resetBtn')
+const experimentSelEl = document.getElementById('experiment')
 
 var viz = new Vizceral.default(document.getElementById('vizceral'))
 viz.updateDefinitions({
@@ -120,7 +127,8 @@ function updateViz () {
     // renderer: 'global',
     renderer: 'swarm',
     // layout: 'ringCenter',
-    layout: 'ring',
+    //layout: 'ring',
+    layout: layout,
     // maxVolume: 10,
     nodes,
     connections
@@ -150,18 +158,12 @@ window.addEventListener('load', () => {
     }
   })
   */
+  startBtn.disabled = false
 })
 
 setInterval(updateViz, 1000)
 
 // var stats = Stats(document.getElementById('hypercore-stats'))
-
-const startBtn = document.getElementById('startBtn')
-const addNodeBtn = document.getElementById('addNodeBtn')
-const statusEl = document.getElementById('status')
-const resetBtn = document.getElementById('resetBtn')
-const experimentSelEl = document.getElementById('experiment')
-addNodeBtn.disabled = true
 
 startBtn.addEventListener('click', () => {
   const experiment = experimentSelEl.value
@@ -171,9 +173,13 @@ startBtn.addEventListener('click', () => {
   addNodeBtn.disabled = false
   resetBtn.disabled = true
   scaleFactor = 3000
-  match = experiment.match(/.*-(\d+)/)
+  const match = experiment.match(/.*-(\d+)/)
   if (!match) throw new Error('No match!')
   const numNodes = match[1]
+  if (experiment.match(/multicast/)) {
+    layout = 'ringMulticast'
+    ensureNode('m')
+  }
   for (let i = 2; i <= numNodes; i++) {
     peerSpeeds[`h${i}-h1`] = {
       uploadSpeed: 0,

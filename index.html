@@ -36,13 +36,20 @@
       float: left;
     }
 
+    #controls {
+      margin: 0 auto;
+    }
+
     .canvasWrapper {
-      height: 500px;
+      /* height: 500px; */
+      height: 90vh;
       /* flex: 1 0; */
+      width: 60vw;
+      margin: 0 auto;
     }
 
     #vizceral {
-      border: 1px solid red;
+      /* border: 1px solid red; */
       /* max-height: 800px; */
       /* height: 50px; */
       /* flex: 0; */
@@ -51,17 +58,17 @@
 </head>
 <body>
   <div id="controls">
-    <button id="startBtn">Start</button>
-    <button id="addNodeBtn">Add Node</button>
+    <button id="startBtn" disabled>Start</button>
+    <button id="addNodeBtn" disabled>Add Node</button>
     <button id="resetBtn">Reset</button>
     <span id="status"></span>
     <select id="experiment">
+      <option value="p2p-2">Simple p2p 2 nodes</option>
       <option value="multicast-2">Multicast 2 nodes</option>
       <option value="multicast-3">Multicast 3 nodes</option>
       <option value="multicast-5">Multicast 5 nodes</option>
       <option value="multicast-7">Multicast 7 nodes</option>
       <option value="multicast-12">Multicast 12 nodes</option>
-      <option value="p2p-2">Simple p2p 2 nodes</option>
       <option value="p2p-3">Simple p2p 3 nodes</option>
       <option value="p2p-5">Simple p2p 5 nodes</option>
       <option value="p2p-7">Simple p2p 7 nodes</option>
