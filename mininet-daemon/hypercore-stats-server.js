@@ -9,8 +9,8 @@ var prettyHash = require('pretty-hash')
 
 module.exports = StatsServer
 
-function StatsServer (feed, wait, emit) {
-  if (!(this instanceof StatsServer)) return new StatsServer(feed, wait, emit)
+function StatsServer (feed, statsOpts, emit) {
+  if (!(this instanceof StatsServer)) return new StatsServer(feed, statsOpts, emit)
 
   events.EventEmitter.call(this)
   self = this
@@ -28,8 +28,7 @@ function StatsServer (feed, wait, emit) {
   send({type: 'key', key: key})
 
   feed.ready(function () {
-    if (wait) setTimeout(join, Number(wait) * 1000)
-    else join()
+    join()
 
     if (archive) track(feed, 'metadata')
     else track(feed, null)
@@ -114,9 +113,22 @@ function StatsServer (feed, wait, emit) {
 
     var peerSpeeds = {}
     const opts = {
+      tcp: true,
+      utp: false,
+      dht: false,
       live: true,
+      hash: false,
+      dns: {
+        server: null, domain: 'dat.local'
+      },
       stream: () => {
-        const stream = target.replicate()
+        const opts = {
+          download: !statsOpts.noDownload,
+          upload: true,
+          live: true
+        }
+        console.log('Jim stream opts', opts)
+        const stream = target.replicate(opts)
         const hex = stream.id.toString('hex')
         if (!streamIdToNameMap[hex]) {
           streamIdToNameMap[hex] = target.id

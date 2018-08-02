@@ -68,24 +68,35 @@ function updateViz () {
       ensureNode(remotePeer)
       if (remotePeer === observerPeer) return
       // FIXME: These will get doubled up when observed from both ends
-      let {uploadSpeed, downloadSpeed, timestamp} = peerSpeeds[key]
-      if (!timestamp || timestamp < now - 1500) {
-        uploadSpeed = 0
-        downloadSpeed = 0
+      if (remotePeer === 'm') {
+        let {speed, timestamp} = peerSpeeds[key]
+        if (!timestamp || timestamp < now - 1500) speed = 0
+        connections.push({
+          source: observerPeer,
+          target: remotePeer,
+          metrics: {multicastSend: speed},
+          metadata: {streaming: true}
+        })
+      } else {
+        let {uploadSpeed, downloadSpeed, timestamp} = peerSpeeds[key]
+        if (!timestamp || timestamp < now - 1500) {
+          uploadSpeed = 0
+          downloadSpeed = 0
+        }
+        // console.log('Jim peerSpeeds', key, peerSpeeds[key])
+        connections.push({
+          source: observerPeer,
+          target: remotePeer,
+          metrics: {normal: uploadSpeed / scaleFactor},
+          metadata: {streaming: true}
+        })
+        connections.push({
+          source: remotePeer,
+          target: observerPeer,
+          metrics: {normal: downloadSpeed / scaleFactor},
+          metadata: {streaming: true}
+        })
       }
-      // console.log('Jim peerSpeeds', key, peerSpeeds[key])
-      connections.push({
-        source: observerPeer,
-        target: remotePeer,
-        metrics: {normal: uploadSpeed / scaleFactor},
-        metadata: {streaming: true}
-      })
-      connections.push({
-        source: remotePeer,
-        target: observerPeer,
-        metrics: {normal: downloadSpeed / scaleFactor},
-        metadata: {streaming: true}
-      })
     }
   })
 
@@ -211,6 +222,16 @@ startBtn.addEventListener('click', () => {
           }
         })
         return
+      case 'multicast-send':
+        {
+          console.log('Jim multicast-send', data)
+          const {host, speed} = data
+          peerSpeeds[`${host}-m`] = {
+            speed,
+            timestamp: Date.now()
+          }
+        }
+        return
       case 'peerIdToHostMap':
         {
           // console.log('Jim', data)
@@ -249,7 +270,8 @@ resetBtn.addEventListener('click', () => {
   fetch('/reset', {method: 'POST'})
   .then(response => response.text())
   .then(text => {
-    alert(text)
+    document.body.innerText = text
+    // alert(text)
     setTimeout(() => location.reload(), 3000)
   })
 })

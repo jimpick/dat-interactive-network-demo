@@ -4,7 +4,8 @@ const supervisor = require('./mnSupervisor')
 
 module.exports = run
 
-const mininetOpts = {bandwidth: 100} // 100mbit
+// const mininetOpts = {bandwidth: 100} // 100mbit
+const mininetOpts = {bandwidth: 1} // 1mbit
 // const mininetOpts = {bandwidth: 10} // 10mbit
 
 function runInSeries (fns, done) {
@@ -40,6 +41,7 @@ function run (numNodes, sendTelemetry, finishedCallback) {
       const swarmDefaults = require('dat-swarm-defaults')
       const discSwarm = require('discovery-swarm')
       const mswarm = require('hypercore-multicast-swarm')
+      const speedometer = require('speedometer')
 
       // const clock = hyperclock(ram, {interval: 500})
       const clock = hyperclock(ram, {interval: 2000})
@@ -76,6 +78,22 @@ function run (numNodes, sendTelemetry, finishedCallback) {
           mtu: 900,
           port: 5007,
           address: '239.0.0.1'
+        })
+
+        msw.on('ready', () => {
+          const speed = speedometer()
+          oldMulticast = msw.cast.__proto__.multicast
+          msw.cast.__proto__.multicast = function tap (buf, cb) {
+            speed(buf.length)
+            oldMulticast.call(this, buf, cb)
+          }
+          setInterval(() => {
+            h1.emit('telemetry', {
+              type: 'multicast-send',
+              host: 'h1',
+              speed: speed()
+            })
+          }, 1000)
         })
 
         clock.on('append', () => msw.multicast(clock.length - 1))
@@ -142,7 +160,7 @@ function run (numNodes, sendTelemetry, finishedCallback) {
 				  let mode = 'Bootstrapping (TCP)'
 
           // statsServer connects to the swarm for us
-          const sw = statsServer(clock, 0.5, (message, args) => {
+          let sw = statsServer(clock, {}, (message, args) => {
             hreplace.emit(message, args)
           })
 
@@ -156,8 +174,16 @@ function run (numNodes, sendTelemetry, finishedCallback) {
           setTimeout(() => {
             console.log('Closing TCP swarm')
             sw.close()
+            console.log('Switching to multicast only')
             mode = 'Multicast only'
-          }, 4500)
+            /*
+            console.log('Switching to multicast + upload only')
+            mode = 'Multicast + upload only'
+            sw = statsServer(clock, {noDownload: true}, (message, args) => {
+              hreplace.emit(message, args)
+            })
+            */
+          }, 3000)
 
 					clock.update(() => {
 						console.log('Length', clock.length)
