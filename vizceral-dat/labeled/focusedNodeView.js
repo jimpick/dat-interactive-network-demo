@@ -51,7 +51,6 @@ class FocusedNodeView extends NodeView {
     super(service);
 
     this.borderColor = GlobalStyles.rgba.colorPageBackground;
-    console.log('Jim borderColor', this.borderColor)
     this.borderColorThree = new THREE.Color(this.borderColor.r, this.borderColor.g, this.borderColor.b);
     this.donutMaterial = new THREE.MeshBasicMaterial({ color: this.borderColorThree, transparent: true, opacity: this.borderColor.a });
     this.innerBorderMaterial = new THREE.MeshBasicMaterial({ color: this.borderColorThree, transparent: true, opacity: this.borderColor.a });
@@ -96,6 +95,11 @@ class FocusedNodeView extends NodeView {
       this.meshes.arcBackground = mesh;
       this.addInteractiveChild(mesh, 'arc');
     }
+
+    if (this.object.name === 'm') {
+      this.setOpacity(0);
+    }
+    
   }
 
   addText () {

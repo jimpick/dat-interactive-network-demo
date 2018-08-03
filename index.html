@@ -54,17 +54,37 @@
       /* height: 50px; */
       /* flex: 0; */
     }
+
+    #antenna {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0;
+    }
+    #antenna img {
+      width: 70px;
+    }
+
+
   </style>
 </head>
 <body>
   <div id="controls">
     <button id="startBtn" disabled>Start</button>
     <button id="addNodeBtn" disabled>Add Node</button>
-    <button id="resetBtn">Reset</button>
+    <button id="resetBtn" disabled>Reset</button>
     <span id="status"></span>
     <select id="experiment">
       <option value="p2p-2">Simple p2p 2 nodes</option>
       <option value="multicast-2">Multicast 2 nodes</option>
+      <!--
       <option value="multicast-3">Multicast 3 nodes</option>
       <option value="multicast-5">Multicast 5 nodes</option>
       <option value="multicast-7">Multicast 7 nodes</option>
@@ -73,6 +93,7 @@
       <option value="p2p-5">Simple p2p 5 nodes</option>
       <option value="p2p-7">Simple p2p 7 nodes</option>
       <option value="p2p-12">Simple p2p 12 nodes</option>
+      -->
     </select>
   </div>
   <!--
@@ -90,7 +111,11 @@
   <div class="canvasWrapper">
     <canvas id="vizceral"></canvas>
     <div class="vizceral-notice"></div>
+    <div id="antenna">
+      <img src="noun_Antenna_31128.svg">
+    </div>
   </div>
   <script src="bundle.js"></script>
+  <!-- <script src="app.js"></script> -->
 </body>
 </html>

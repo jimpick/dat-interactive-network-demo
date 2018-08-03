@@ -8,13 +8,14 @@ var uploadSpeed = speedometer()
 var downloadSpeed = speedometer()
 let peerSpeeds = {}
 var peerIdToHostMap = {}
-let layout = 'ring'
+let layout
 
 const startBtn = document.getElementById('startBtn')
 const addNodeBtn = document.getElementById('addNodeBtn')
 const statusEl = document.getElementById('status')
 const resetBtn = document.getElementById('resetBtn')
 const experimentSelEl = document.getElementById('experiment')
+const antennaEl = document.getElementById('antenna')
 
 var viz = new Vizceral.default(document.getElementById('vizceral'))
 viz.updateDefinitions({
@@ -122,17 +123,19 @@ function updateViz () {
     console.log('  ', source, target, normal) 
   })
   */
-  viz.updateData({
-    name: 'dat',
-    // renderer: 'global',
-    renderer: 'swarm',
-    // layout: 'ringCenter',
-    //layout: 'ring',
-    layout: layout,
-    // maxVolume: 10,
-    nodes,
-    connections
-  })
+  if (layout) {
+    viz.updateData({
+      name: 'dat',
+      // renderer: 'global',
+      renderer: 'swarm',
+      // layout: 'ringCenter',
+      //layout: 'ring',
+      layout: layout,
+      // maxVolume: 10,
+      nodes,
+      connections
+    })
+  }
 }
 
 window.addEventListener('load', () => {
@@ -159,6 +162,7 @@ window.addEventListener('load', () => {
   })
   */
   startBtn.disabled = false
+  resetBtn.disabled = false
 })
 
 setInterval(updateViz, 1000)
@@ -167,6 +171,7 @@ setInterval(updateViz, 1000)
 
 startBtn.addEventListener('click', () => {
   const experiment = experimentSelEl.value
+  experimentSelEl.disabled = true
   console.log('Running', experiment)
   statusEl.innerText = 'Running'
   startBtn.disabled = true
@@ -179,6 +184,9 @@ startBtn.addEventListener('click', () => {
   if (experiment.match(/multicast/)) {
     layout = 'ringMulticast'
     ensureNode('m')
+    antennaEl.style.opacity = 1
+  } else {
+    layout = 'ring'
   }
   for (let i = 2; i <= numNodes; i++) {
     peerSpeeds[`h${i}-h1`] = {
@@ -295,6 +303,6 @@ resetBtn.addEventListener('click', () => {
   .then(text => {
     document.body.innerText = text
     // alert(text)
-    setTimeout(() => location.reload(), 3000)
+    setTimeout(() => location.reload(), 5000)
   })
 })
