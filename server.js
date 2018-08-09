@@ -53,6 +53,7 @@ function middleware (req, res, next) {
   console.log('Jim req url', req.url)
   const match1 = req.url.match(/\/events\/p2p-(\d+)/)
   const match2 = req.url.match(/\/events\/multicast-(\d+)/)
+  const match3 = req.url.match(/\/events\/libp2p-echo-(\d+)/)
   if (match1) {
     const numNodes = match1[1]
     const runReplicate = require('./mininet-daemon/replicate-150mb')
@@ -74,6 +75,24 @@ function middleware (req, res, next) {
   } else if (match2) {
     const numNodes = match2[1]
     const runReplicate = require('./mininet-daemon/hyperclock-multicast')
+    if (running) return
+    running = true
+    // event stream
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+    addNode = runReplicate(numNodes, sendTelemetry, finished)
+
+    function sendTelemetry (event) {
+      res.write('data: ' + JSON.stringify(event) + '\n\n')
+    }
+
+    function finished () {
+      console.log('Finished')
+      res.end('data: {"type": "close"}\n\n')
+      running = false
+    }
+  } else if (match3) {
+    const numNodes = match3[1]
+    const runReplicate = require('./mininet-daemon/libp2p-echo/index.js')
     if (running) return
     running = true
     // event stream
